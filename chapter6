@@ -58,11 +58,15 @@ quantiles_df <- benchmark  |>
 
 # ビン幅ごとの四分位点の図表を表示
 ggplot(quantiles_df, aes(x = bin_mid)) +
-  geom_line(aes(y = q25, color = "25%")) +
-  geom_line(aes(y = q50, color = "50%")) +
-  geom_line(aes(y = q75, color = "75%")) +
+  geom_line(aes(y = q25, size = "25%"), color = "black") +
+  geom_line(aes(y = q50, size = "50%"), color = "black") +
+  geom_line(aes(y = q75, size = "75%"), color = "black") +
   geom_vline(xintercept = 0.004, color = "red", linetype = "dashed", linewidth = 1) +
-  labs(x = "ROAビン（中央値）", y = "運転資本", color = "分位点") +
+  scale_size_manual(
+    name = "分位点",
+    values = c("25%" = 0.5, "50%" = 1.2, "75%" = 2)
+  ) +
+  labs(x = "ROAビン（中央値）", y = "運転資本") +
   theme_minimal() +
   ggtitle("ROAビンごとの運転資本の四分位数")
 
