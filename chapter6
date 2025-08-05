@@ -3,7 +3,7 @@ library(dplyr)
 library(ggplot2)
 
 # データインポート 
-benchmark <- read.csv("")
+benchmark <- read.csv("06benchmark")
 benchmark
 summary(benchmark)
 
