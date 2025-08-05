@@ -1,0 +1,44 @@
+# analysis_v3 20250802 create
+# analysis_v3 20250805 update
+
+# 4章
+
+# リセット
+rm(list = ls())
+
+# 四則演算
+1 + 1
+5 - 2
+2 * 3
+8 / 2
+
+
+# データの読み込み
+fin_df <- read.csv("financial_data.csv")
+
+# 記述統計
+summary(fin_df)
+
+# tidyverseパッケージのインストール（初回）
+install.packages("tidyverse")
+
+# tidyverseパッケージのインストール（インストール完了後は、# でコメント・アウト）
+# install.packages("tidyverse")
+
+# パッケージの読み込み
+library(tidyverse)
+
+
+# ROEの三分解を計算して、結果を fin_df に追加する
+fin_df <- fin_df |> 
+  mutate(
+    roe = ni / na,
+    profit_margin = ni / sale,
+    asset_turnover = sale / ta,
+    financial_leverage = ta / na
+  )
+
+# ROEの三分解の計算結果を表示
+fin_df |> 
+  select(name, year, roe, profit_margin, asset_turnover, financial_leverage) |> 
+  print()
