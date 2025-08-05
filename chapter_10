@@ -1,5 +1,5 @@
 # CSVファイルの読み込み
-full_data <- read_csv("full_data.csv")
+full_data <- read_csv("10full_data.csv")
 # 条件に合う行だけを抽出
 filtered_data <- full_data |>
   filter(fiveyear_anadata == 1)
