@@ -25,7 +25,7 @@ cleaned_df$bps <- cleaned_df$na / cleaned_df$so
 
 
 # 必要ならCSVに保存
-write.csv(df_eps, "eps_result.csv", row.names = FALSE)
+write.csv(cleaned_df, "eps_result.csv", row.names = FALSE)
 
 
 # 相関係数の計算
