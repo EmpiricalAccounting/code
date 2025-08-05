@@ -1,0 +1,79 @@
+# CSVファイルの読み込み
+full_data <- read_csv("full_data.csv")
+# 条件に合う行だけを抽出
+filtered_data <- full_data |>
+  filter(fiveyear_anadata == 1)
+# 指定されたライフサイクル列における「1」の数をカウント
+lifecycle_counts <- filtered_data |>
+  summarise(
+    intro    = sum(lc_intro == 1, na.rm = TRUE),
+    growth   = sum(lc_growth == 1, na.rm = TRUE),
+    mature   = sum(lc_mature == 1, na.rm = TRUE),
+    shakeout = sum(lc_shakeout == 1, na.rm = TRUE),
+    decline  = sum(lc_decline == 1, na.rm = TRUE)
+  )
+print(lifecycle_counts)
+
+# lc_intro と lc1_intro が両方 1 の行を抽出し、その行数をカウント
+count <- filtered_data |>
+  filter(lc_intro == 1 & lc1_intro == 1) |>
+  nrow()
+# 結果を表示
+print(count)
+
+install.packages("DescTools")  # 初回のみ
+library(tidyverse)
+library(DescTools)
+# 決算期（year）ごとに上下1%でウィンサライズし、roa_anaに格納（full_dataの「roa_ana」にはすでにウィンサライズした結果を示しているので、分析者が新しい変数名を定義されたい）
+full_data <- full_data |>
+  group_by(year) |>
+  mutate(roa_ana = Winsorize(roa, probs = c(0.01, 0.99), na.rm = TRUE)) |>
+  ungroup()
+
+# roa_anadata が 1 のデータを抽出
+roa_filtered <- full_data |>
+  filter(roa_anadata == 1)
+# 対象変数のリスト
+roa_vars <- c("roa_ana", "roa1_ana", "roa2_ana", "roa3_ana", "roa4_ana", "roa5_ana")
+# 各変数の中央値を計算
+roa_medians <- roa_filtered |>
+  summarise(across(all_of(roa_vars), ~median(.x, na.rm = TRUE)))
+# 結果を表示
+print(roa_medians)
+
+# 条件に合うデータを抽出
+filtered_data <- full_data |>
+  filter(roa_anadata == 1, lc_intro == 1)
+# 対象の変数を指定
+roa_vars <- c("roa_ana", "roa1_ana", "roa2_ana", "roa3_ana", "roa4_ana", "roa5_ana")
+# 中央値を計算（NA除外）
+roa_medians <- filtered_data |>
+  summarise(across(all_of(roa_vars), ~median(.x, na.rm = TRUE)))
+# 結果表示
+print(roa_medians)
+
+
+# 必要なパッケージ
+library(modelsummary)
+library(dplyr)
+
+# 重回帰分析モデルの定義
+model <- lm(delta_roa1 ~ roa_ana + delta_roa + delta_asset + delta_ato + delta_pm +
+              lc_intro + lc_growth + lc_shakeout + lc_decline +
+              dummy2002 + dummy2003 + dummy2004 + dummy2005 + dummy2006 +
+              dummy2007 + dummy2008 + dummy2009 + dummy2010 + dummy2011 +
+              dummy2012 + dummy2013 + dummy2014 + dummy2015 + dummy2016 +
+              dummy2017 + dummy2018,
+            data = roa_ana_pooleddata)
+
+# 表の出力（係数と t 値、調整済 R²、サンプルサイズ含む）
+modelsummary(
+  model,
+  statistic = "t = {statistic}",     # t 値を表示
+  stars = TRUE,                # 有意性記号（*, **, ***）を付与
+  fmt = 3                      # 小数第3位まで表示
+)
+
+
+
+
