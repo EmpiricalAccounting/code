@@ -2,7 +2,7 @@
 library(dplyr)
 
 # データ読み込み
-sp_df <- read.csv("stock_price_data.csv", fileEncoding = "UTF-8")
+sp_df <- read.csv("05stock_price_data.csv", fileEncoding = "UTF-8")
 
 # 複合キー（code と year）で結合
 merged_df <- inner_join(fin_df, sp_df, by = c("code", "year"))
