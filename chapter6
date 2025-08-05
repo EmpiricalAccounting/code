@@ -11,7 +11,7 @@ summary(benchmark)
 benchmark <- benchmark |>
   mutate(ROA = 決算_親会社株主に帰属する当期利益 / 前年度_総資産)
 benchmark <- benchmark |>
-  mutate(ACC = 会計発生高 / 前年度_総資産)
+  mutate(ACC = 運転資本 / 前年度_総資産)
 
 # ヒストグラム作成用に上下10％を省略したデータ作成
 roa_min <- quantile(benchmark$ROA, 0.1, na.rm = TRUE)
