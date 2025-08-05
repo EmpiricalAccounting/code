@@ -13,15 +13,15 @@ library(tidyverse)
 # データの読み込み
 # データはコードファイルと同じディレクトリに置く
 # 株価
-stock_price <- read_csv("stock_price.csv")
+stock_price <- read_csv("08stock_price.csv")
 stock_price
 
 # インデックス
-index <- read_csv("index.csv")
+index <- read_csv("08index.csv")
 index
 
 # 利益と決算発表日
-earnings <- read_csv("earnings.csv")
+earnings <- read_csv("08earnings.csv")
 earnings
 
 earnings |>
