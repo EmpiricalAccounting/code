@@ -1,8 +1,5 @@
 # analysis_v3 20250802 create
 # analysis_v3 20250805 update
-
-# 4章
-
 # リセット
 rm(list = ls())
 
