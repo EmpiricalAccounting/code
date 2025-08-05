@@ -14,7 +14,7 @@ library(tidyverse)
 
 # データの読み込み
 # データはコードファイルと同じディレクトリに置く
-financial <- read_csv("determinant.csv")
+financial <- read_csv("12determinant.csv")
 financial
 
 table(financial$year)
