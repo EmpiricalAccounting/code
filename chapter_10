@@ -1,9 +1,3 @@
-# 初回は必要（コメントアウトを解除して実行）
-#install.packages("tidyverse")
-
-# パッケージの読み込み
-library(tidyverse)
-
 # CSVファイルの読み込み
 full_data <- read_csv("full_data.csv")
 # 条件に合う行だけを抽出
