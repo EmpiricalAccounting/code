@@ -19,9 +19,6 @@ summary(fin_df)
 # tidyverseパッケージのインストール（初回）
 install.packages("tidyverse")
 
-# tidyverseパッケージのインストール（インストール完了後は、# でコメント・アウト）
-# install.packages("tidyverse")
-
 # パッケージの読み込み
 library(tidyverse)
 
