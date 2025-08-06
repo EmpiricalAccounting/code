@@ -2,6 +2,7 @@
 library(dplyr)
 
 # データ読み込み
+fin_df <- read.csv("04financial_data.csv")
 sp_df <- read.csv("05stock_price_data.csv", fileEncoding = "UTF-8")
 
 # 複合キー（code と year）で結合
