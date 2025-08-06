@@ -1,5 +1,6 @@
+
 # CSVファイルの読み込み
-full_data <- read_csv("10full_data.csv")
+full_data <- read_csv("full_data.csv")
 # 条件に合う行だけを抽出
 filtered_data <- full_data |>
   filter(fiveyear_anadata == 1)
@@ -21,14 +22,20 @@ count <- filtered_data |>
 # 結果を表示
 print(count)
 
-install.packages("DescTools")  # 初回のみ
 library(tidyverse)
 library(DescTools)
-# 決算期（year）ごとに上下1%でウィンサライズし、roa_anaに格納（full_dataの「roa_ana」にはすでにウィンサライズした結果を示しているので、分析者が新しい変数名を定義されたい）
+# 正しいウィンサライズ処理（yearごとに分割して処理）
 full_data <- full_data |>
-  group_by(year) |>
-  mutate(roa_ana = Winsorize(roa, probs = c(0.01, 0.99), na.rm = TRUE)) |>
-  ungroup()
+  group_split(year) |>
+  map_dfr(~ .x |>
+            mutate(roa_ana = Winsorize(roa, probs = c(0.01, 0.99), na.rm = TRUE)))
+
+※今回は既にroa_anaが存在するので、新しい変数名（例：roa_anav2）にして分析する
+
+full_data <- full_data |>
+  group_split(year) |>
+  map_dfr(~ .x |>
+            mutate(roa_anav2 = Winsorize(roa, probs = c(0.01, 0.99), na.rm = TRUE)))
 
 # roa_anadata が 1 のデータを抽出
 roa_filtered <- full_data |>
@@ -52,12 +59,28 @@ roa_medians <- filtered_data |>
 # 結果表示
 print(roa_medians)
 
-
-# 必要なパッケージ
+install.packages("modelsummary")  # 初回のみ
+install.packages("readr")         # CSV読み込み
 library(modelsummary)
+library(readr)
 library(dplyr)
 
-# 重回帰分析モデルの定義
+# ファイルを読み込み（パスは適宜調整）
+roa_ana_pooleddata <- read_csv("roa_ana_pooleddata.csv")
+
+library(dplyr)
+# 使用する説明変数・被説明変数の一覧
+regression_vars <- c(
+  "delta_roa1", "roa_ana", "delta_roa", "delta_asset", "delta_ato", "delta_pm",
+  "lc_intro", "lc_growth", "lc_shakeout", "lc_decline",
+  paste0("dummy", 2002:2018)  # dummy2002〜dummy2018
+)
+
+# full_data から必要な列を選び、欠損のある行を除去して定義
+roa_ana_pooleddata <- full_data|>
+  select(all_of(regression_vars)) |>
+  drop_na()
+
 model <- lm(delta_roa1 ~ roa_ana + delta_roa + delta_asset + delta_ato + delta_pm +
               lc_intro + lc_growth + lc_shakeout + lc_decline +
               dummy2002 + dummy2003 + dummy2004 + dummy2005 + dummy2006 +
@@ -66,14 +89,18 @@ model <- lm(delta_roa1 ~ roa_ana + delta_roa + delta_asset + delta_ato + delta_p
               dummy2017 + dummy2018,
             data = roa_ana_pooleddata)
 
-# 表の出力（係数と t 値、調整済 R²、サンプルサイズ含む）
-modelsummary(
-  model,
-  statistic = "t = {statistic}",     # t 値を表示
-  stars = TRUE,                # 有意性記号（*, **, ***）を付与
-  fmt = 3                      # 小数第3位まで表示
-)
+# modelsummaryパッケージのインストール
+# 初回は必要（コメントアウトを解除して実行）
+#install.packages("modelsummary")
 
+# パッケージの読み込み
+library(modelsummary)
+
+# 結果の表示
+msummary(model,
+         statistic = "statistic",
+         star = TRUE,
+         stars = c("*" = .10, "**" = .05, "***" = .01))
 
 
 
