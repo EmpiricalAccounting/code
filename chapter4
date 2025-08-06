@@ -11,7 +11,7 @@ rm(list = ls())
 
 
 # データの読み込み
-fin_df <- read.csv("04financial_data.csv")
+fin_df <- read.csv("04_financial_data.csv")
 
 # 記述統計
 summary(fin_df)
