@@ -2,8 +2,8 @@
 library(dplyr)
 
 # データ読み込み
-fin_df <- read.csv("04financial_data.csv")
-sp_df <- read.csv("05stock_price_data.csv", fileEncoding = "UTF-8")
+fin_df <- read.csv("04_financial_data.csv")
+sp_df <- read.csv("05_stock_price_data.csv", fileEncoding = "UTF-8")
 
 # 複合キー（code と year）で結合
 merged_df <- inner_join(fin_df, sp_df, by = c("code", "year"))
@@ -26,7 +26,7 @@ cleaned_df$bps <- cleaned_df$na / cleaned_df$so
 
 
 # 必要ならCSVに保存
-write.csv(cleaned_df, "eps_result.csv", row.names = FALSE)
+write.csv(cleaned_df, "05_eps_result.csv", row.names = FALSE)
 
 
 # 相関係数の計算
