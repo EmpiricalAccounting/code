@@ -6,7 +6,7 @@
 library(tidyverse)
 
 # CSVファイルの読み込み
-full_data <- read_csv("10full_data.csv")
+full_data <- read_csv("10_full_data.csv")
 # 条件に合う行だけを抽出
 filtered_data <- full_data |>
   filter(fiveyear_anadata == 1)
@@ -75,7 +75,7 @@ print(roa_medians)
 
 
 # ファイルを読み込み（パスは適宜調整）
-roa_ana_pooleddata <- read_csv("10roa_ana_pooleddata.csv")
+roa_ana_pooleddata <- read_csv("10_roa_ana_pooleddata.csv")
 
 # 使用する説明変数・被説明変数の一覧
 regression_vars <- c(
