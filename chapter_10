@@ -6,7 +6,7 @@
 library(tidyverse)
 
 # CSVファイルの読み込み
-full_data <- read_csv("full_data.csv")
+full_data <- read_csv("10full_data.csv")
 # 条件に合う行だけを抽出
 filtered_data <- full_data |>
   filter(fiveyear_anadata == 1)
@@ -28,20 +28,27 @@ count <- filtered_data |>
 # 結果を表示
 print(count)
 
-library(tidyverse)
-library(DescTools)
+
+# winsor()を使うためにpsychを準備
+install.packages("psych")
+library(psych)
+
 # 正しいウィンサライズ処理（yearごとに分割して処理）
 full_data <- full_data |>
-  group_split(year) |>
-  map_dfr(~ .x |>
-            mutate(roa_ana = Winsorize(roa, probs = c(0.01, 0.99), na.rm = TRUE)))
+  group_by(year) |>
+  mutate(
+    roa_ana = winsor(roa, trim = 0.01, na.rm = TRUE)
+  ) |>
+  ungroup()
 
-※今回は既にroa_anaが存在するので、新しい変数名（例：roa_anav2）にして分析する
+# ※今回は既にroa_anaが存在するので、新しい変数名（例：roa_anav2）にして分析する
 
 full_data <- full_data |>
-  group_split(year) |>
-  map_dfr(~ .x |>
-            mutate(roa_anav2 = Winsorize(roa, probs = c(0.01, 0.99), na.rm = TRUE)))
+  group_by(year) |>
+  mutate(
+    roa_anav2 = winsor(roa, trim = 0.01, na.rm = TRUE)
+  ) |>
+  ungroup()
 
 # roa_anadata が 1 のデータを抽出
 roa_filtered <- full_data |>
@@ -65,16 +72,11 @@ roa_medians <- filtered_data |>
 # 結果表示
 print(roa_medians)
 
-install.packages("modelsummary")  # 初回のみ
-install.packages("readr")         # CSV読み込み
-library(modelsummary)
-library(readr)
-library(dplyr)
+
 
 # ファイルを読み込み（パスは適宜調整）
-roa_ana_pooleddata <- read_csv("roa_ana_pooleddata.csv")
+roa_ana_pooleddata <- read_csv("10roa_ana_pooleddata.csv")
 
-library(dplyr)
 # 使用する説明変数・被説明変数の一覧
 regression_vars <- c(
   "delta_roa1", "roa_ana", "delta_roa", "delta_asset", "delta_ato", "delta_pm",
@@ -98,7 +100,7 @@ model <- lm(delta_roa1 ~ roa_ana + delta_roa + delta_asset + delta_ato + delta_p
 # modelsummaryパッケージのインストール
 # 初回は必要（コメントアウトを解除して実行）
 #install.packages("modelsummary")
-
+summary(model)
 # パッケージの読み込み
 library(modelsummary)
 
@@ -107,6 +109,7 @@ msummary(model,
          statistic = "statistic",
          star = TRUE,
          stars = c("*" = .10, "**" = .05, "***" = .01))
+
 
 
 
