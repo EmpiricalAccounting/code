@@ -64,22 +64,13 @@ benchmark <- benchmark |>
 quantiles_df <- benchmark  |>
   group_by(bin) |>
   summarize(
-    q0 = quantile(ACC, 0, na.rm = TRUE),
-    q25 = quantile(ACC, 0.25, na.rm = TRUE),
-    q50 = quantile(ACC, 0.5, na.rm = TRUE),
-    q75 = quantile(ACC, 0.75, na.rm = TRUE),
-    q100 = quantile(ACC, 1, na.rm = TRUE)
-  ) |>
-　mutate(
-    bin_id  = as.integer(bin),                                # 1,2,3,... のビン番号
-    bin_mid = (breaks[bin_id] + breaks[bin_id + 1]) / 2       # 区間の中央値
+    q0 = quantile(WAC, 0, na.rm = TRUE),
+    q25 = quantile(WAC, 0.25, na.rm = TRUE),
+    q50 = quantile(WAC, 0.5, na.rm = TRUE),
+    q75 = quantile(WAC, 0.75, na.rm = TRUE),
+    q100 = quantile(WAC, 1, na.rm = TRUE)
   )  |>
-  select(-bin_id)
-
-
-
-
-mutate(
+  mutate(
     bin_id  = as.integer(bin),                                # 1,2,3,... のビン番号
     bin_mid = (breaks[bin_id] + breaks[bin_id + 1]) / 2       # 区間の中央値
   )  |>
@@ -91,7 +82,7 @@ ggplot(quantiles_df, aes(x = bin_mid)) +
   geom_line(aes(y = q25, size = "25%"), color = "black") +
   geom_line(aes(y = q50, size = "50%"), color = "black") +
   geom_line(aes(y = q75, size = "75%"), color = "black") +
-  geom_vline(xintercept = 0.004, color = "red", linetype = "dashed", linewidth = 1) +
+  geom_vline(xintercept = 0.004, color = "black", linetype = "dashed", linewidth = 1) +
   scale_size_manual(
     name = "分位点",
     values = c("25%" = 0.5, "50%" = 1.2, "75%" = 2)
