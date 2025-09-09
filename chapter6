@@ -2,7 +2,7 @@
 library(tidyverse)
 
 # 06_benchmark.csvデータのインポート 
-benchmark <- read.csv("06_benchmark.csv")
+benchmark <- read_csv("06_benchmark.csv")
 summary(benchmark)
 
 # benchmarkのデータベースにROAとWACの変数の作成
@@ -10,29 +10,46 @@ benchmark <- benchmark |>
   mutate(ROA = 決算_親会社株主に帰属する当期利益 / 前年度_総資産,
          WAC = 運転資本 / 前年度_総資産)
 
-# ヒストグラム作成用に上下10％を省略したデータ作成
-roa_min <- quantile(benchmark$ROA, 0.1, na.rm = TRUE)
-roa_max <- quantile(benchmark$ROA, 0.9, na.rm = TRUE)
-breaks <- seq(roa_min, roa_max, by = 0.008)
+# ROAのヒストグラムの作成（ビンは灰色，背景_白色，範囲は-0.2から0.2，必ず[0,0.008]を通る）
+benchmark |>
+  ggplot(aes(x = ROA)) +
+  geom_histogram(
+    binwidth = 0.008,
+    boundary = 0, 
+    fill = "lightgray",
+    color = "black"
+  ) +
+  scale_x_continuous(limits = c(-0.2, 0.2)) +
+  labs(
+    title = "ROAヒストグラム",
+    x = "ROA",
+    y = "件数"
+  )+
+  theme_classic()
 
-roa_range <- benchmark$ROA[benchmark$ROA >= roa_min & benchmark$ROA <= roa_max]
-breakshist <- seq(
-  floor(roa_min / 0.008) * 0.008,
-  ceiling(roa_max / 0.008) * 0.008,
-  by = 0.008
-)
 
+# ROAのヒストグラムで[0, 0.008]のビンの色を黒色にする。
+benchmark |>
+  mutate(
+    highlight = if_else(!is.na(ROA) & ROA >= 0 & ROA <= 0.008, "highlight", "other")
+  ) |>
+  ggplot(aes(x = ROA, fill = highlight)) +
+  geom_histogram(
+    binwidth = 0.008,  
+    boundary = 0, 
+    color = "black"
+  ) +
+  scale_fill_manual(
+    values = c("highlight" = "black", "other" = "lightgray"),
+    guide = "none" 
+  ) + scale_x_continuous(limits = c(-0.2, 0.2))+ 
+  labs(
+    title = "ROAヒストグラム",
+    x = "ROA",
+    y = "件数"
+  ) +
+  theme_classic()  
 
-# ROAヒストグラムの作成 
-hist(
-  roa_range,
-  breaks = breakshist,
-  main = "ROAヒストグラム",
-  xlab = "ROA",
-  ylab = "件数",
-  col = "lightgray",
-  border = "black"
-)
 
 # 四分位点の計算
 benchmark <- benchmark |>
@@ -47,7 +64,7 @@ quantiles_df <- benchmark  |>
     q50 = quantile(ACC, 0.5, na.rm = TRUE),
     q75 = quantile(ACC, 0.75, na.rm = TRUE),
     q100 = quantile(ACC, 1, na.rm = TRUE)
-  ) %>%
+  ) |>
   mutate(
     bin_mid = (as.numeric(sub("\\((.+),.*", "\\1", bin)) + 
                  as.numeric(sub(".*,(.+)\\]", "\\1", bin))) / 2
