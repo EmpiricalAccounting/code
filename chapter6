@@ -1,17 +1,14 @@
 # ライブラリーの読み込み
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 
-# データインポート 
-benchmark <- read.csv("06_benchmark")
-benchmark
+# 06_benchmark.csvデータのインポート 
+benchmark <- read.csv("06_benchmark.csv")
 summary(benchmark)
 
-# ROAの計算
+# benchmarkのデータベースにROAとWACの変数の作成
 benchmark <- benchmark |>
-  mutate(ROA = 決算_親会社株主に帰属する当期利益 / 前年度_総資産)
-benchmark <- benchmark |>
-  mutate(ACC = 運転資本 / 前年度_総資産)
+  mutate(ROA = 決算_親会社株主に帰属する当期利益 / 前年度_総資産,
+         WAC = 運転資本 / 前年度_総資産)
 
 # ヒストグラム作成用に上下10％を省略したデータ作成
 roa_min <- quantile(benchmark$ROA, 0.1, na.rm = TRUE)
