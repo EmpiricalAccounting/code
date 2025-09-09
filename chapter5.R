@@ -51,9 +51,6 @@ model_multiple <- lm(sp ~ eps + bps, data = cleaned_df)
 # 結果の表示
 summary(model_multiple)
 
-# carパッケージのインストール
-install.packages("car")
-
 # carパッケージの読み込み
 library(car)
 
