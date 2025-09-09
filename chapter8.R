@@ -1,6 +1,4 @@
-# パッケージのインストール
-# 初回は必要（コメントアウトを解除して実行）
-#install.packages("tidyverse")
+# 第8章 株価と利益情報を用いたイベントスタディ
 
 # パッケージの読み込み
 library(tidyverse)
@@ -11,15 +9,15 @@ library(tidyverse)
 # データの読み込み
 # データはコードファイルと同じディレクトリに置く
 # 株価
-stock_price <- read_csv("08_stock_price.csv")
+stock_price <- read_csv("stock_price.csv")
 stock_price
 
 # インデックス
-index <- read_csv("08_index.csv")
+index <- read_csv("index.csv")
 index
 
 # 利益と決算発表日
-earnings <- read_csv("08_earnings.csv")
+earnings <- read_csv("earnings.csv")
 earnings
 
 earnings |>
@@ -33,7 +31,7 @@ earning_change <- earnings |>
   arrange(firm_id, year) |>
   group_by(firm_id) |>
   mutate(
-    diff_earnings   = earnings - lag(earnings, 1),
+    diff_earnings  = earnings - lag(earnings, 1),
     earning_change = diff_earnings > 0
   ) |>
   ungroup() |>
@@ -47,7 +45,7 @@ earning_change |>
 
 # （3）相対日数の設定 ---------------------------------------------------------------
 
-# 通算日数の表示
+# 通算日数のリスト化
 dates <- stock_price |>
   select(date) |>
   distinct(date) |>
@@ -58,7 +56,7 @@ dates <- stock_price |>
 start_end <-
   dates |>
 
-  # さしあたりリストの日付と番号をアナウンスメント日とする
+  # 通算日数リストの日付と番号をアナウンスメント日とする
   rename(announce_date   = date,
          announce_number = date_number) |>
 
@@ -120,14 +118,6 @@ sample_ar |>
   filter(relative_date == 0) |>
   group_by(earning_change) |>
   summarise(mean(ar))
-
-t.test(sample_ar |>
-         filter(relative_date == 0, earning_change == T) |> pull(ar),
-       mu = 0)
-
-t.test(sample_ar |>
-         filter(relative_date == 0, earning_change == F) |> pull(ar),
-       mu = 0)
 
 
 # （6）累積異常リターンの計算とグラフの作成 ---------------------------------------------------------------
