@@ -1,6 +1,4 @@
-# パッケージのインストール
-# 初回は必要（コメントアウトを解除して実行）
-#install.packages("tidyverse")
+# 第12章 IFRS適用の決定要因分析
 
 # パッケージの読み込み
 library(tidyverse)
@@ -12,11 +10,8 @@ library(tidyverse)
 
 # データの読み込み
 # データはコードファイルと同じディレクトリに置く
-financial <- read_csv("12_determinant.csv")
+financial <- read_csv("determinant.csv")
 financial
-
-table(financial$year)
-
 
 # ifrsはダミー変数なのでファクター型にしておく
 financial <- financial |>
@@ -25,7 +20,6 @@ financial <- financial |>
 # IFRS適用企業と日本基準適用企業の観測値の数
 table(financial$ifrs)
 
-xtabs(~ year + ifrs, financial)
 
 # （2）変数の計算 ---------------------------------------------------------------
 
@@ -45,33 +39,26 @@ summary(financial)
 
 # （3）IFRSと日本基準の平均値の差の検定 ---------------------------------------------------------------
 
-# IFRS適用企業と日本基準適用企業を分ける
-financial_ifrs <- financial |>
-  filter(ifrs == 1)
-
-financial_jpn <- financial |>
-  filter(ifrs == 0)
-
 # のれん
-t.test(financial_ifrs$ratio_goodwill, financial_jpn$ratio_goodwill)
+t.test(ratio_goodwill ~ ifrs, data = financial)
 
 # 研究開発費
-t.test(financial_ifrs$ratio_rd, financial_jpn$ratio_rd)
+t.test(ratio_rd ~ ifrs, data = financial)
 
 # 海外売上高比率
-t.test(financial_ifrs$ratio_foreign_sales, financial_jpn$ratio_foreign_sales)
+t.test(ratio_foreign_sales ~ ifrs, data = financial)
 
 # 外国人持株比率
-t.test(financial_ifrs$ratio_foreign_shares, financial_jpn$ratio_foreign_shares)
+t.test(ratio_foreign_shares ~ ifrs, data = financial)
 
 # 企業規模
-t.test(financial_ifrs$size, financial_jpn$size)
+t.test(size ~ ifrs, data = financial)
 
 # レバレッジ
-t.test(financial_ifrs$leverage, financial_jpn$leverage)
+t.test(leverage ~ ifrs, data = financial)
 
 # ROA
-t.test(financial_ifrs$roa, financial_jpn$roa)
+t.test(roa ~ ifrs, data = financial)
 
 
 # （4）ロジット分析 ---------------------------------------------------------------
@@ -83,11 +70,7 @@ result_logit <- glm(ifrs ~ ratio_goodwill + ratio_rd + ratio_foreign_sales + rat
                      family = binomial(link = "logit"))
 
 
-# modelsummaryパッケージのインストール
-# 初回は必要（コメントアウトを解除して実行）
-#install.packages("modelsummary")
-
-# パッケージの読み込み
+# modelsummaryパッケージの読み込み
 library(modelsummary)
 
 # 結果の表示
@@ -95,3 +78,4 @@ msummary(result_logit,
          statistic = "statistic",
          star = TRUE,
          stars = c("*" = .10, "**" = .05, "***" = .01))
+
