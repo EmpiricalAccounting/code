@@ -1,158 +1,140 @@
-# 第8章 株価と利益情報を用いたイベントスタディ
+# 第8章 株価と利益情報を用いたイベント・スタディ
 
 # パッケージの読み込み
 library(tidyverse)
 
+# CSVファイルの読み込み
+full_data <- read_csv("10_full_data.csv")
+# 条件に合う行だけを抽出
+filtered_data <- full_data |>
+  filter(fiveyear_anadata == 1)
 
-# （1）データの概要 ---------------------------------------------------------------
-
-# データの読み込み
-# データはコードファイルと同じディレクトリに置く
-# 株価
-stock_price <- read_csv("stock_price.csv")
-stock_price
-
-# インデックス
-index <- read_csv("index.csv")
-index
-
-# 利益と決算発表日
-earnings <- read_csv("earnings.csv")
-earnings
-
-earnings |>
-  distinct(firm_id) |>
-  count()
-
-# （2）増益企業と減益企業の判定 ---------------------------------------------------------------
-
-# 増益か減益かの判定
-earning_change <- earnings |>
-  arrange(firm_id, year) |>
-  group_by(firm_id) |>
+# 企業のライフサイクルを定義する
+cat("\n==== 企業のライフサイクルを定義する ====\n")
+filtered_data <- filtered_data |>
   mutate(
-    diff_earnings  = earnings - lag(earnings, 1),
-    earning_change = diff_earnings > 0
+    # intro: ocf・icf が負、fcf が正
+    intro = if_else(ocf < 0 & icf < 0 & fcf > 0, 1L, 0L, missing = 0L),
+    # growth: ocf・fcf が正、icf が負
+    growth = if_else(ocf > 0 & fcf > 0 & icf < 0, 1L, 0L, missing = 0L),
+    # mature: icf・fcf が負、ocf が正
+    mature = if_else(icf < 0 & fcf < 0 & ocf > 0, 1L, 0L, missing = 0L),
+    # decline: ocf が負、icf が正（fcf は不問）
+    decline = if_else(ocf < 0 & icf > 0, 1L, 0L, missing = 0L)
   ) |>
-  ungroup() |>
-  drop_na(earning_change)
+  mutate(
+    # shakeout: intro・growth・mature・decline がすべて 0 のとき 1
+    shakeout = if_else(intro == 0L & growth == 0L & mature == 0L & decline == 0L,
+                       1L, 0L, missing = 0L)
 
-# 数の確認
-earning_change |>
-  group_by(earning_change) |>
-  count()
+    # 指定されたライフサイクル列における「1」の数をカウント
+    lifecycle_counts <- filtered_data |>
+      summarise(
+        intro    = sum(lc_intro == 1, na.rm = TRUE),
+        growth   = sum(lc_growth == 1, na.rm = TRUE),
+        mature   = sum(lc_mature == 1, na.rm = TRUE),
+        shakeout = sum(lc_shakeout == 1, na.rm = TRUE),
+        decline  = sum(lc_decline == 1, na.rm = TRUE)
+      )
+    print(lifecycle_counts)
+
+    # 説明変数・被説明変数の算定
+    # 割り算ヘルパー
+    safe_div <- function(num, den) {
+      ifelse(is.na(den) | den == 0, NA_real_, num / den)
+    }
+
+    filtered_data <- filtered_data |>
+      mutate(
+        # roa
+        roa  = safe_div(oi,  asset),
+        roa1 = safe_div(oi1, asset1),
+        roa2 = safe_div(oi2, asset2),
+        roa3 = safe_div(oi3, asset3),
+        roa4 = safe_div(oi4, asset4),
+        roa5 = safe_div(oi5, asset5),
+
+        # 前年roa（roab1）
+        roab1 = safe_div(oib1, assetb1),
+
+        # Δroa
+        delta_roa  = roa  - roab1,  # 指定：roa − roab1
+        delta_roa1 = roa1 - roa,    # 指定：roa1 − roa
+        delta_roa2 = roa2 - roa,    # 指定：roa2 − roa
+        delta_roa3 = roa3 - roa,    # 指定：roa3 − roa
+        delta_roa4 = roa4 - roa,    # 指定：roa4 − roa
+        delta_roa5 = roa5 - roa,    # 指定：roa5 − roa
+
+        # Δasset
+        delta_asset = safe_div(asset - assetb1, assetb1),
+
+        # ato
+        ato   = safe_div(sales,  asset),
+        atob1 = safe_div(salesb1, assetb1),
+        delta_ato = ato - atob1,
+
+        # pm
+        pm   = safe_div(oi,  sales),
+        pmb1 = safe_div(oib1, salesb1),
+        delta_pm = pm - pmb1
+      )
+
+    # 正しいウィンサライズ処理（yearごとに分割して処理）
+    # winsor()を使うためにpsychを準備
+    # install.packages("psych")  # 1回だけでOK
+    library(psych)
+    library(dplyr)
+
+    # 対象変数
+    winsor_vars <- c(
+      "delta_roa1","delta_roa2","delta_roa3","delta_roa4","delta_roa5",
+      "roa","delta_roa","delta_asset","delta_ato","delta_pm"
+    )
+
+    # yearごとに上下1% winsorize（_w列として保存）
+    full_data <- full_data |>
+      group_by(year) |>
+      mutate(
+        across(
+          any_of(winsor_vars),
+          ~{
+            v <- .
+            # NAはそのまま、非NAのみwinsorize
+            idx <- !is.na(v)
+            if (any(idx)) v[idx] <- psych::winsor(as.numeric(v[idx]), trim = 0.01)
+            v
+          },
+          .names = "{.col}_w"
+        )
+      ) |>
+      ungroup()
+
+    # 重回帰モデルの推定
+    regression_vars <- c(
+      "delta_roa1", "roa", "delta_roa", "delta_asset", "delta_ato", "delta_pm",
+      "intro", "growth", "shakeout", "decline",
+      paste0("dummy", 2002:2018)  # dummy2002〜dummy2018
+    )
+
+    model <- lm(delta_roa1 ~ roa + delta_roa + delta_asset + delta_ato + delta_pm +
+                  intro + growth + shakeout + decline +
+                  dummy2002 + dummy2003 + dummy2004 + dummy2005 + dummy2006 +
+                  dummy2007 + dummy2008 + dummy2009 + dummy2010 + dummy2011 +
+                  dummy2012 + dummy2013 + dummy2014 + dummy2015 + dummy2016 +
+                  dummy2017 + dummy2018,
+                data = full_data)
+
+    # modelsummaryパッケージのインストール
+    # 初回は必要（コメントアウトを解除して実行）
+    #install.packages("modelsummary")
+    summary(model)
+    # パッケージの読み込み
+    library(modelsummary)
+
+    # 結果の表示
+    msummary(model,
+             statistic = "statistic",
+             star = TRUE,
+             stars = c("*" = .10, "**" = .05, "***" = .01))
 
 
-# （3）相対日数の設定 ---------------------------------------------------------------
-
-# 通算日数のリスト化
-dates <- stock_price |>
-  select(date) |>
-  distinct(date) |>
-  arrange(date) |>
-  mutate(date_number = row_number())
-
-# 開始と終了時点の判定
-start_end <-
-  dates |>
-
-  # 通算日数リストの日付と番号をアナウンスメント日とする
-  rename(announce_date   = date,
-         announce_number = date_number) |>
-
-  # アナウンスメント前後の期間の最初と最後の番号
-  mutate(start_number = announce_number - 240,
-         end_number   = announce_number + 120)
-
-# 決算発表日からの相対日数を各日付ごとに適用
-dates_announce <-
-  dates |>
-  inner_join(start_end, join_by(between(date_number, start_number, end_number))) |>
-  mutate(relative_date = date_number - announce_number) |>
-  select(announce_date, relative_date, date)
-
-# 相対日数と利益変化と株価とインデックスの結合
-sample_data <- earning_change |>
-  left_join(dates_announce, by = "announce_date") |>
-  left_join(stock_price, by = c("firm_id", "date")) |>
-  left_join(index, by = "date")
-
-# 確認
-sample_data |>
-  filter(firm_id == 1, year == 2023) |>
-  select(announce_date, relative_date, date, earning_change, price, index) |>
-  print(n = Inf)
-
-
-# （4）株式リターンの計算 ---------------------------------------------------------------
-
-# 株式リターンの計算
-sample_return <- sample_data |>
-  arrange(firm_id, date) |>
-  group_by(firm_id, year) |>
-  mutate(return       = (price - lag(price, 1)) / lag(price, 1),
-         index_return = (index - lag(index, 1)) / lag(index, 1),
-         return       = replace_na(return, 0),
-         index_return = replace_na(index_return, 0)) |>
-  ungroup()
-
-# 確認
-sample_return |>
-  filter(firm_id == 1, year == 2023, relative_date == 0) |>
-  select(return, index_return)
-
-
-# （5）異常リターンの計算 ---------------------------------------------------------------
-
-# 異常リターンの計算
-sample_ar <- sample_return |>
-  mutate(ar = return - index_return)
-
-# 確認（1社）
-sample_ar |>
-  filter(firm_id == 1, year == 2023, relative_date == 0) |>
-  select(ar)
-
-# 確認（平均値）
-sample_ar |>
-  filter(relative_date == 0) |>
-  group_by(earning_change) |>
-  summarise(mean(ar))
-
-
-# （6）累積異常リターンの計算とグラフの作成 ---------------------------------------------------------------
-
-# 累積異常リターンの計算
-sample_car <- sample_ar |>
-  group_by(firm_id, year) |>
-  arrange(date) |>
-  mutate(car = cumsum(ar)) |>
-  ungroup()
-
-# 確認
-sample_car |>
-  filter(firm_id == 1, year == 2023, relative_date == 0) |>
-  select(car) |>
-  print()
-
-# 累積異常リターンの平均値
-sample_car_mean <- sample_car |>
-  group_by(earning_change, relative_date) |>
-  summarise(mean_car = mean(car, na.rm = TRUE),
-            .groups = 'drop')
-
-# 確認
-sample_car_mean |>
-  filter(relative_date == 0)
-
-# グラフの作成
-sample_car_mean |>
-  mutate(`Earnings Change` = if_else(earning_change, "Good", "Bad"),
-         `Earnings Change` = factor(`Earnings Change`, levels = c("Good", "Bad"))) |>
-  ggplot(aes(x = relative_date, y = mean_car, linetype = `Earnings Change`)) +
-  geom_line() +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray80") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray80") +
-  labs(x = "Relative Date", y = "CAR") +
-  theme(legend.position = "bottom") +
-  theme_classic()
