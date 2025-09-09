@@ -60,7 +60,7 @@ vif(model_multiple)
 # ロジスティック回帰分析
 
 # TRUEまたはFALSE を 1または0 に変換
-df <- cleaned_df %>%
+df <- cleaned_df |>
   mutate(div_binary = as.numeric(div))
 
 # ロジスティック回帰モデル
