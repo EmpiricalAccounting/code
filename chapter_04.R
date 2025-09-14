@@ -1,4 +1,4 @@
-# 4章
+# 4章 Rでのデータ分析（基礎）
 
 # リセット
 rm(list = ls())
@@ -10,13 +10,13 @@ rm(list = ls())
 8 / 2
 
 # データの読み込み
-fin_df <- read.csv("04_financial_data.csv")
+financial_data <- read.csv("04_financial_data.csv")
 
 # 読み込んだデータの確認
-head(fin_df)
+head(financial_data)
 
 # 記述統計
-summary(fin_df)
+summary(financial_data)
 
 # tidyverseパッケージのインストール（初回）
 install.packages(c("tidyverse", "car", "psych", "modelsummary"))
@@ -27,33 +27,33 @@ install.packages(c("tidyverse", "car", "psych", "modelsummary"))
 # パッケージの読み込み
 library(tidyverse)
 
-# ROEの三分解を計算して、結果を fin_df に追加する（第1引数を直接書く場合）
-fin_df <- mutate(
-  fin_df,
-  roe = ni / na,
-  profit_margin = ni / sale,
-  asset_turnover = sale / ta,
-  financial_leverage = ta / na
+# ROEの三分解を計算して、結果を financial_dataに追加する（第1引数を直接書く場合）
+financial_data <- mutate(
+  financial_data,
+  roe                = earnings / equity,
+  profit_margin      = earnings / sales,
+  asset_turnover     = sales / total_assets,
+  financial_leverage = total_assets / equity
 )
 
-# ROEの三分解を計算して、結果を fin_df に追加する（パイプ演算子を使用する場合）
-fin_df <- fin_df |> 
+# ROEの三分解を計算して、結果を financial_data, に追加する（パイプ演算子を使用する場合）
+financial_data <- financial_data |> 
   mutate(
-    roe = ni / na,
-    profit_margin = ni / sale,
-    asset_turnover = sale / ta,
-    financial_leverage = ta / na
+    roe                = earnings / equity,
+    profit_margin      = earnings / sales,
+    asset_turnover     = sales / total_assets,
+    financial_leverage = total_assets / equity
   )
 
 # ROEの三分解の計算結果を表示（パイプ演算子を使用する場合）
-fin_df |> 
-  select(name, year, roe, profit_margin, asset_turnover, financial_leverage) |> 
+financial_data |> 
+  select(firm_name, year, roe, profit_margin, asset_turnover, financial_leverage) |> 
   print()
 
 # ROEの三分解の計算結果を表示（パイプ演算子を使用しない場合）
 print(
   select(
-    fin_df,
-    name, year, roe, profit_margin, asset_turnover, financial_leverage
+    financial_data,
+    firm_name, year, roe, profit_margin, asset_turnover, financial_leverage
   )
 )
