@@ -70,10 +70,9 @@ filtered_data <- filtered_data |>
     pmb1 = safe_div(oib1, salesb1),
     delta_pm = pm - pmb1,
 
-    # 年度ダミー（
+    # 年度ダミー
     # 年度をファクター型にすることで重回帰分析で年度ダミーとして扱われる
-
-
+    year = as.factor(year)
   )
 
     # 正しいウィンサライズ処理（yearごとに分割して処理）
