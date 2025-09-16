@@ -10,15 +10,6 @@ rm(list = ls())
 2 * 3
 8 / 2
 
-# データの読み込み
-financial_data <- read_csv("ch04_financial_data.csv")
-
-# 読み込んだデータの確認
-head(financial_data)
-
-# 記述統計
-summary(financial_data)
-
 # tidyverseパッケージのインストール（初回）
 install.packages(c("tidyverse", "car", "psych", "modelsummary"))
 
@@ -27,6 +18,15 @@ install.packages(c("tidyverse", "car", "psych", "modelsummary"))
 
 # パッケージの読み込み
 library(tidyverse)
+
+# データの読み込み
+financial_data <- read_csv("ch04_financial_data.csv")
+
+# 読み込んだデータの確認
+head(financial_data)
+
+# 記述統計
+summary(financial_data)
 
 # ROEの三分解を計算して、結果を financial_dataに追加する（第1引数を直接書く場合）
 financial_data <- mutate(financial_data,
