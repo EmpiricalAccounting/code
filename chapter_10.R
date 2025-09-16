@@ -1,6 +1,4 @@
-# パッケージのインストール
-# 初回は必要（コメントアウトを解除して実行）
-#install.packages("tidyverse")
+# 第8章 株価と利益情報を用いたイベント・スタディ
 
 # パッケージの読み込み
 library(tidyverse)
@@ -10,106 +8,133 @@ full_data <- read_csv("10_full_data.csv")
 # 条件に合う行だけを抽出
 filtered_data <- full_data |>
   filter(fiveyear_anadata == 1)
-# 指定されたライフサイクル列における「1」の数をカウント
-lifecycle_counts <- filtered_data |>
-  summarise(
-    intro    = sum(lc_intro == 1, na.rm = TRUE),
-    growth   = sum(lc_growth == 1, na.rm = TRUE),
-    mature   = sum(lc_mature == 1, na.rm = TRUE),
-    shakeout = sum(lc_shakeout == 1, na.rm = TRUE),
-    decline  = sum(lc_decline == 1, na.rm = TRUE)
-  )
-print(lifecycle_counts)
 
-# lc_intro と lc1_intro が両方 1 の行を抽出し、その行数をカウント
-count <- filtered_data |>
-  filter(lc_intro == 1 & lc1_intro == 1) |>
-  nrow()
-# 結果を表示
-print(count)
-
-
-# winsor()を使うためにpsychを準備
-install.packages("psych")
-library(psych)
-
-# 正しいウィンサライズ処理（yearごとに分割して処理）
-full_data <- full_data |>
-  group_by(year) |>
+# 企業のライフサイクルを定義する
+cat("\n==== 企業のライフサイクルを定義する ====\n")
+filtered_data <- filtered_data |>
   mutate(
-    roa_ana = winsor(roa, trim = 0.01, na.rm = TRUE)
+    # intro: ocf・icf が負、fcf が正
+    intro = if_else(ocf < 0 & icf < 0 & fcf > 0, 1L, 0L, missing = 0L),
+    # growth: ocf・fcf が正、icf が負
+    growth = if_else(ocf > 0 & fcf > 0 & icf < 0, 1L, 0L, missing = 0L),
+    # mature: icf・fcf が負、ocf が正
+    mature = if_else(icf < 0 & fcf < 0 & ocf > 0, 1L, 0L, missing = 0L),
+    # decline: ocf が負、icf が正（fcf は不問）
+    decline = if_else(ocf < 0 & icf > 0, 1L, 0L, missing = 0L)
   ) |>
-  ungroup()
-
-# ※今回は既にroa_anaが存在するので、新しい変数名（例：roa_anav2）にして分析する
-
-full_data <- full_data |>
-  group_by(year) |>
   mutate(
-    roa_anav2 = winsor(roa, trim = 0.01, na.rm = TRUE)
-  ) |>
-  ungroup()
+    # shakeout: intro・growth・mature・decline がすべて 0 のとき 1
+    shakeout = if_else(intro == 0L & growth == 0L & mature == 0L & decline == 0L,
+                       1L, 0L, missing = 0L)
 
-# roa_anadata が 1 のデータを抽出
-roa_filtered <- full_data |>
-  filter(roa_anadata == 1)
-# 対象変数のリスト
-roa_vars <- c("roa_ana", "roa1_ana", "roa2_ana", "roa3_ana", "roa4_ana", "roa5_ana")
-# 各変数の中央値を計算
-roa_medians <- roa_filtered |>
-  summarise(across(all_of(roa_vars), ~median(.x, na.rm = TRUE)))
-# 結果を表示
-print(roa_medians)
+    # 指定されたライフサイクル列における「1」の数をカウント
+    lifecycle_counts <- filtered_data |>
+      summarise(
+        intro    = sum(lc_intro == 1, na.rm = TRUE),
+        growth   = sum(lc_growth == 1, na.rm = TRUE),
+        mature   = sum(lc_mature == 1, na.rm = TRUE),
+        shakeout = sum(lc_shakeout == 1, na.rm = TRUE),
+        decline  = sum(lc_decline == 1, na.rm = TRUE)
+      )
+    print(lifecycle_counts)
 
-# 条件に合うデータを抽出
-filtered_data <- full_data |>
-  filter(roa_anadata == 1, lc_intro == 1)
-# 対象の変数を指定
-roa_vars <- c("roa_ana", "roa1_ana", "roa2_ana", "roa3_ana", "roa4_ana", "roa5_ana")
-# 中央値を計算（NA除外）
-roa_medians <- filtered_data |>
-  summarise(across(all_of(roa_vars), ~median(.x, na.rm = TRUE)))
-# 結果表示
-print(roa_medians)
+    # 説明変数・被説明変数の算定
+    # 割り算ヘルパー
+    safe_div <- function(num, den) {
+      ifelse(is.na(den) | den == 0, NA_real_, num / den)
+    }
 
+    filtered_data <- filtered_data |>
+      mutate(
+        # roa
+        roa  = safe_div(oi,  asset),
+        roa1 = safe_div(oi1, asset1),
+        roa2 = safe_div(oi2, asset2),
+        roa3 = safe_div(oi3, asset3),
+        roa4 = safe_div(oi4, asset4),
+        roa5 = safe_div(oi5, asset5),
 
+        # 前年roa（roab1）
+        roab1 = safe_div(oib1, assetb1),
 
-# ファイルを読み込み（パスは適宜調整）
-roa_ana_pooleddata <- read_csv("10_roa_ana_pooleddata.csv")
+        # Δroa
+        delta_roa  = roa  - roab1,  # 指定：roa − roab1
+        delta_roa1 = roa1 - roa,    # 指定：roa1 − roa
+        delta_roa2 = roa2 - roa,    # 指定：roa2 − roa
+        delta_roa3 = roa3 - roa,    # 指定：roa3 − roa
+        delta_roa4 = roa4 - roa,    # 指定：roa4 − roa
+        delta_roa5 = roa5 - roa,    # 指定：roa5 − roa
 
-# 使用する説明変数・被説明変数の一覧
-regression_vars <- c(
-  "delta_roa1", "roa_ana", "delta_roa", "delta_asset", "delta_ato", "delta_pm",
-  "lc_intro", "lc_growth", "lc_shakeout", "lc_decline",
-  paste0("dummy", 2002:2018)  # dummy2002〜dummy2018
-)
+        # Δasset
+        delta_asset = safe_div(asset - assetb1, assetb1),
 
-# full_data から必要な列を選び、欠損のある行を除去して定義
-roa_ana_pooleddata <- full_data|>
-  select(all_of(regression_vars)) |>
-  drop_na()
+        # ato
+        ato   = safe_div(sales,  asset),
+        atob1 = safe_div(salesb1, assetb1),
+        delta_ato = ato - atob1,
 
-model <- lm(delta_roa1 ~ roa_ana + delta_roa + delta_asset + delta_ato + delta_pm +
-              lc_intro + lc_growth + lc_shakeout + lc_decline +
-              dummy2002 + dummy2003 + dummy2004 + dummy2005 + dummy2006 +
-              dummy2007 + dummy2008 + dummy2009 + dummy2010 + dummy2011 +
-              dummy2012 + dummy2013 + dummy2014 + dummy2015 + dummy2016 +
-              dummy2017 + dummy2018,
-            data = roa_ana_pooleddata)
+        # pm
+        pm   = safe_div(oi,  sales),
+        pmb1 = safe_div(oib1, salesb1),
+        delta_pm = pm - pmb1
+      )
 
-# modelsummaryパッケージのインストール
-# 初回は必要（コメントアウトを解除して実行）
-#install.packages("modelsummary")
-summary(model)
-# パッケージの読み込み
-library(modelsummary)
+    # 正しいウィンサライズ処理（yearごとに分割して処理）
+    # winsor()を使うためにpsychを準備
+    # install.packages("psych")  # 1回だけでOK
+    library(psych)
+    library(dplyr)
 
-# 結果の表示
-msummary(model,
-         statistic = "statistic",
-         star = TRUE,
-         stars = c("*" = .10, "**" = .05, "***" = .01))
+    # 対象変数
+    winsor_vars <- c(
+      "delta_roa1","delta_roa2","delta_roa3","delta_roa4","delta_roa5",
+      "roa","delta_roa","delta_asset","delta_ato","delta_pm"
+    )
 
+    # yearごとに上下1% winsorize（_w列として保存）
+    full_data <- full_data |>
+      group_by(year) |>
+      mutate(
+        across(
+          any_of(winsor_vars),
+          ~{
+            v <- .
+            # NAはそのまま、非NAのみwinsorize
+            idx <- !is.na(v)
+            if (any(idx)) v[idx] <- psych::winsor(as.numeric(v[idx]), trim = 0.01)
+            v
+          },
+          .names = "{.col}_w"
+        )
+      ) |>
+      ungroup()
 
+    # 重回帰モデルの推定
+    regression_vars <- c(
+      "delta_roa1", "roa", "delta_roa", "delta_asset", "delta_ato", "delta_pm",
+      "intro", "growth", "shakeout", "decline",
+      paste0("dummy", 2002:2018)  # dummy2002〜dummy2018
+    )
+
+    model <- lm(delta_roa1 ~ roa + delta_roa + delta_asset + delta_ato + delta_pm +
+                  intro + growth + shakeout + decline +
+                  dummy2002 + dummy2003 + dummy2004 + dummy2005 + dummy2006 +
+                  dummy2007 + dummy2008 + dummy2009 + dummy2010 + dummy2011 +
+                  dummy2012 + dummy2013 + dummy2014 + dummy2015 + dummy2016 +
+                  dummy2017 + dummy2018,
+                data = full_data)
+
+    # modelsummaryパッケージのインストール
+    # 初回は必要（コメントアウトを解除して実行）
+    #install.packages("modelsummary")
+    summary(model)
+    # パッケージの読み込み
+    library(modelsummary)
+
+    # 結果の表示
+    msummary(model,
+             statistic = "statistic",
+             star = TRUE,
+             stars = c("*" = .10, "**" = .05, "***" = .01))
 
 
