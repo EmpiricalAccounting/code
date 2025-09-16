@@ -1,83 +1,75 @@
-# 第8章 株価と利益情報を用いたイベント・スタディ
+# 第10章 キャッシュ・フロー計算書を用いた重回帰分析
+
 
 # パッケージの読み込み
 library(tidyverse)
 
-# CSVファイルの読み込み
-full_data <- read_csv("10_full_data.csv")
+# データの読み込み
+financial_data <- read_csv("ch10_fundamental_analysis.csv")
+head(financial_data)
+
+
 # 条件に合う行だけを抽出
-filtered_data <- full_data |>
+filtered_data <- financial_data |>
   filter(fiveyear_anadata == 1)
 
-# 企業のライフサイクルを定義する
-cat("\n==== 企業のライフサイクルを定義する ====\n")
-filtered_data <- filtered_data |>
+# 企業のライフサイクルステージを判定する
+filtered_data <- financial_data |>
   mutate(
     # intro: ocf・icf が負、fcf が正
-    intro = if_else(ocf < 0 & icf < 0 & fcf > 0, 1L, 0L, missing = 0L),
+    intro = ocf < 0 & icf < 0 & fcf > 0,
     # growth: ocf・fcf が正、icf が負
-    growth = if_else(ocf > 0 & fcf > 0 & icf < 0, 1L, 0L, missing = 0L),
+    growth = ocf > 0 & fcf > 0 & icf < 0,
     # mature: icf・fcf が負、ocf が正
-    mature = if_else(icf < 0 & fcf < 0 & ocf > 0, 1L, 0L, missing = 0L),
+    mature = icf < 0 & fcf < 0 & ocf > 0,
     # decline: ocf が負、icf が正（fcf は不問）
-    decline = if_else(ocf < 0 & icf > 0, 1L, 0L, missing = 0L)
-  ) |>
-  mutate(
+    decline = ocf < 0 & icf > 0,
     # shakeout: intro・growth・mature・decline がすべて 0 のとき 1
-    shakeout = if_else(intro == 0L & growth == 0L & mature == 0L & decline == 0L,
-                       1L, 0L, missing = 0L)
+    shakeout = intro == 0L & growth == 0L & mature == 0L & decline == 0L
+  )
 
-    # 指定されたライフサイクル列における「1」の数をカウント
-    lifecycle_counts <- filtered_data |>
-      summarise(
-        intro    = sum(lc_intro == 1, na.rm = TRUE),
-        growth   = sum(lc_growth == 1, na.rm = TRUE),
-        mature   = sum(lc_mature == 1, na.rm = TRUE),
-        shakeout = sum(lc_shakeout == 1, na.rm = TRUE),
-        decline  = sum(lc_decline == 1, na.rm = TRUE)
-      )
-    print(lifecycle_counts)
+# それぞれのライフサイクルでの観測値の数をカウント
+lifecycle_counts <- filtered_data |>
+  summarise(intro    = sum(intro == 1, na.rm = TRUE),
+            growth   = sum(growth == 1, na.rm = TRUE),
+            mature   = sum(mature == 1, na.rm = TRUE),
+            shakeout = sum(shakeout == 1, na.rm = TRUE),
+            decline  = sum(decline == 1, na.rm = TRUE))
+lifecycle_counts
 
-    # 説明変数・被説明変数の算定
-    # 割り算ヘルパー
-    safe_div <- function(num, den) {
-      ifelse(is.na(den) | den == 0, NA_real_, num / den)
-    }
+# 変数の計算
+filtered_data <- filtered_data |>
+  mutate(roa = earnigns / total_asset),
+         roa1 = safe_div(oi1, asset1),
+         roa2 = safe_div(oi2, asset2),
+    roa3 = safe_div(oi3, asset3),
+    roa4 = safe_div(oi4, asset4),
+    roa5 = safe_div(oi5, asset5),
 
-    filtered_data <- filtered_data |>
-      mutate(
-        # roa
-        roa  = safe_div(oi,  asset),
-        roa1 = safe_div(oi1, asset1),
-        roa2 = safe_div(oi2, asset2),
-        roa3 = safe_div(oi3, asset3),
-        roa4 = safe_div(oi4, asset4),
-        roa5 = safe_div(oi5, asset5),
+    # 前年roa（roab1）
+    roab1 = safe_div(oib1, assetb1),
 
-        # 前年roa（roab1）
-        roab1 = safe_div(oib1, assetb1),
+    # Δroa
+    delta_roa = roa - roab1, # 指定：roa − roab1
+    delta_roa1 = roa1 - roa, # 指定：roa1 − roa
+    delta_roa2 = roa2 - roa, # 指定：roa2 − roa
+    delta_roa3 = roa3 - roa, # 指定：roa3 − roa
+    delta_roa4 = roa4 - roa, # 指定：roa4 − roa
+    delta_roa5 = roa5 - roa, # 指定：roa5 − roa
 
-        # Δroa
-        delta_roa  = roa  - roab1,  # 指定：roa − roab1
-        delta_roa1 = roa1 - roa,    # 指定：roa1 − roa
-        delta_roa2 = roa2 - roa,    # 指定：roa2 − roa
-        delta_roa3 = roa3 - roa,    # 指定：roa3 − roa
-        delta_roa4 = roa4 - roa,    # 指定：roa4 − roa
-        delta_roa5 = roa5 - roa,    # 指定：roa5 − roa
+    # Δasset
+    delta_asset = safe_div(asset - assetb1, assetb1),
 
-        # Δasset
-        delta_asset = safe_div(asset - assetb1, assetb1),
+    # ato
+    ato = safe_div(sales, asset),
+    atob1 = safe_div(salesb1, assetb1),
+    delta_ato = ato - atob1,
 
-        # ato
-        ato   = safe_div(sales,  asset),
-        atob1 = safe_div(salesb1, assetb1),
-        delta_ato = ato - atob1,
-
-        # pm
-        pm   = safe_div(oi,  sales),
-        pmb1 = safe_div(oib1, salesb1),
-        delta_pm = pm - pmb1
-      )
+    # pm
+    pm = safe_div(oi, sales),
+    pmb1 = safe_div(oib1, salesb1),
+    delta_pm = pm - pmb1
+  )
 
     # 正しいウィンサライズ処理（yearごとに分割して処理）
     # winsor()を使うためにpsychを準備

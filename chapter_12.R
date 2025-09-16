@@ -1,74 +1,62 @@
 # 第12章 IFRS適用の決定要因分析
 
+
 # パッケージの読み込み
 library(tidyverse)
 
-
-# 第3節　変数の計算と平均値の比較 ---------------------------------------------------------------
-
-# （1）データの読み込み ---------------------------------------------------------------
-
 # データの読み込み
-# データはコードファイルと同じディレクトリに置く
-financial <- read_csv("determinant.csv")
-financial
+financial_data <- read_csv("ch12_determinant_analysis.csv")
+
+# データの表示
+head(financial_data)
 
 # ifrsはダミー変数なのでファクター型にしておく
-financial <- financial |>
+financial_data <- financial_data |>
   mutate(ifrs = as.factor(ifrs))
 
 # IFRS適用企業と日本基準適用企業の観測値の数
-table(financial$ifrs)
-
-
-# （2）変数の計算 ---------------------------------------------------------------
+table(financial_data$ifrs)
 
 # 変数の計算
-financial <- financial |>
-  mutate(ratio_goodwill       = goodwill / assets,
-         ratio_rd             = rd / sales,
+financial_data <- financial_data |>
+  mutate(ratio_goodwill       = goodwill / total_assets,
+         ratio_rd             = research_development / sales,
          ratio_foreign_sales  = foreign_sales / sales,
-         ratio_foreign_shares = foreign_shares * shares_unit / shares_outstanding,
-         size                 = log(assets),
-         leverage             = liabilities / assets,
-         roa                  = earnings / assets)
+         ratio_foreign_shares = foreign_ownership * shares_unit / shares_outstanding,
+         size                 = log(total_assets),
+         leverage             = liabilities / total_assets,
+         roa                  = earnings / total_assets)
 
 # 記述統計量の表示
-summary(financial)
+summary(financial_data)
 
-
-# （3）IFRSと日本基準の平均値の差の検定 ---------------------------------------------------------------
-
+# IFRSと日本基準の平均値の差の検定
 # のれん
-t.test(ratio_goodwill ~ ifrs, data = financial)
+t.test(ratio_goodwill ~ ifrs, data = financial_data)
 
 # 研究開発費
-t.test(ratio_rd ~ ifrs, data = financial)
+t.test(ratio_rd ~ ifrs, data = financial_data)
 
 # 海外売上高比率
-t.test(ratio_foreign_sales ~ ifrs, data = financial)
+t.test(ratio_foreign_sales ~ ifrs, data = financial_data)
 
 # 外国人持株比率
-t.test(ratio_foreign_shares ~ ifrs, data = financial)
+t.test(ratio_foreign_shares ~ ifrs, data = financial_data)
 
 # 企業規模
-t.test(size ~ ifrs, data = financial)
+t.test(size ~ ifrs, data = financial_data)
 
 # レバレッジ
-t.test(leverage ~ ifrs, data = financial)
+t.test(leverage ~ ifrs, data = financial_data)
 
 # ROA
-t.test(roa ~ ifrs, data = financial)
-
-
-# （4）ロジット分析 ---------------------------------------------------------------
+t.test(roa ~ ifrs, data = financial_data)
 
 # ロジット分析の実施
-result_logit <- glm(ifrs ~ ratio_goodwill + ratio_rd + ratio_foreign_sales + ratio_foreign_shares
-                     + size + leverage + roa,
-                     data = financial,
+result_logit <- glm(ifrs ~ ratio_goodwill + ratio_rd + ratio_foreign_sales
+                    + ratio_foreign_shares + size + leverage + roa,
+                     data = financial_data,
                      family = binomial(link = "logit"))
-
 
 # modelsummaryパッケージの読み込み
 library(modelsummary)
@@ -78,4 +66,3 @@ msummary(result_logit,
          statistic = "statistic",
          star = TRUE,
          stars = c("*" = .10, "**" = .05, "***" = .01))
-

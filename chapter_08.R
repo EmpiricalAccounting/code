@@ -1,23 +1,21 @@
 # 第8章 株価と利益情報を用いたイベントスタディ
 
 
-# 第3節 多数の企業での株価反応分析 ---------------------------------------------------------------
-
 # パッケージの読み込み
 library(tidyverse)
 
 # データの読み込み
 # 株価
 stock_data <- read_csv("ch08_stock_data.csv")
-stock_data
+head(stock_data)
 
 # インデックス
 index_data <- read_csv("ch08_index_data.csv")
-index_data
+head(index_data)
 
 # 利益と決算発表日
 earnings_data <- read_csv("ch08_earnings_data.csv")
-earnings_data
+head(earnings_data)
 
 # 増益企業と減益企業の判定
 earning_change <- earnings_data |>
