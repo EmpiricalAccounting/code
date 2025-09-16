@@ -39,7 +39,7 @@ lifecycle_counts
 
 # 変数の計算
 filtered_data <- filtered_data |>
-  mutate(roa = earnigns / total_asset),
+  mutate(roa = earnigns / total_asset,
          roa1 = safe_div(oi1, asset1),
          roa2 = safe_div(oi2, asset2),
     roa3 = safe_div(oi3, asset3),
@@ -68,7 +68,12 @@ filtered_data <- filtered_data |>
     # pm
     pm = safe_div(oi, sales),
     pmb1 = safe_div(oib1, salesb1),
-    delta_pm = pm - pmb1
+    delta_pm = pm - pmb1,
+
+    # 年度ダミー（
+    # 年度をファクター型にすることで重回帰分析で年度ダミーとして扱われる
+
+
   )
 
     # 正しいウィンサライズ処理（yearごとに分割して処理）
@@ -108,25 +113,19 @@ filtered_data <- filtered_data |>
       paste0("dummy", 2002:2018)  # dummy2002〜dummy2018
     )
 
-    model <- lm(delta_roa1 ~ roa + delta_roa + delta_asset + delta_ato + delta_pm +
-                  intro + growth + shakeout + decline +
-                  dummy2002 + dummy2003 + dummy2004 + dummy2005 + dummy2006 +
-                  dummy2007 + dummy2008 + dummy2009 + dummy2010 + dummy2011 +
-                  dummy2012 + dummy2013 + dummy2014 + dummy2015 + dummy2016 +
-                  dummy2017 + dummy2018,
-                data = full_data)
+# 重回帰分析
+model <- lm(delta_roa1 ~ roa + delta_roa + delta_asset + delta_ato + delta_pm +
+            intro + growth + shakeout + decline + year,
+            data = financial_data)
 
-    # modelsummaryパッケージのインストール
-    # 初回は必要（コメントアウトを解除して実行）
-    #install.packages("modelsummary")
-    summary(model)
-    # パッケージの読み込み
-    library(modelsummary)
+# 結果の表示
+summary(model)
 
-    # 結果の表示
-    msummary(model,
-             statistic = "statistic",
-             star = TRUE,
-             stars = c("*" = .10, "**" = .05, "***" = .01))
+# パッケージの読み込み
+library(modelsummary)
 
-
+# 結果の表示
+msummary(model,
+         statistic = "statistic",
+         star = TRUE,
+         stars = c("*" = .10, "**" = .05, "***" = .01))
