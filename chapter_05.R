@@ -30,9 +30,8 @@ head(clean_data)
 
 # EPS（1株あたり当期純利益）とBPS（1株あたり純資産）を計算して列を追加
 clean_data <- clean_data |>
-  mutate(eps = earnings / shares_outstanding, # EPS（1株あたり当期純利益の計算）
-         bps = equity / shares_outstanding )  # BPS（1株あたり純資産の計算）
-
+  mutate(eps = earnings / shares_outstanding,
+         bps = equity / shares_outstanding )
 
 # 必要ならCSVに保存
 write_csv(clean_data, "ch05_clean_data.csv")
@@ -45,10 +44,10 @@ correlation_data <- clean_data |>
   select(eps, bps, stock_price, sales, earnings)
 
 # 相関係数表の作成
-correlation_matrix <- cor(cor_data, use = "complete.obs")
+correlation_matrix <- cor(correlation_data, use = "complete.obs")
 
 # 結果を表示
-print(cor_matrix)
+print(correlation_matrix)
 
 # 単回帰分析の実行
 model_single <- lm(stock_price ~ eps, data = clean_data)
@@ -73,7 +72,8 @@ clean_data <- clean_data |>
   mutate(dividend_binary = as.numeric(dividend))
 
 # ロジスティック回帰モデル
-model_logistic <- glm(dividend_binary ~ earnings, data = clean_data, family = binomial)
+model_logistic <- glm(dividend_binary ~ earnings,
+                      data = clean_data, family = binomial)
 
 # 結果の表示
 summary(model_logistic)

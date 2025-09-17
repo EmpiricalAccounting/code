@@ -32,7 +32,7 @@ earning_change |>
   count()
 
 # 通算日数のリスト化
-dates <- stock_price |>
+dates <- stock_data |>
   select(date) |>
   distinct(date) |>
   arrange(date) |>

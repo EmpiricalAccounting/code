@@ -28,25 +28,27 @@ head(financial_data)
 # 記述統計
 summary(financial_data)
 
-# ROEの三分解を計算して、結果を financial_dataに追加する（第1引数を直接書く場合）
+# ROEの三分解を計算して、結果をfinancial_dataに追加する
+# 第1引数を直接書く場合
 financial_data <- mutate(financial_data,
                          roe                = earnings / equity,
                          profit_margin      = earnings / sales,
                          asset_turnover     = sales / total_assets,
                          financial_leverage = total_assets / equity)
 
-# ROEの三分解を計算して、結果を financial_data, に追加する（パイプ演算子を使用する場合）
+# パイプ演算子を使用する場合
 financial_data <- financial_data |>
   mutate(roe                = earnings / equity,
          profit_margin      = earnings / sales,
          asset_turnover     = sales / total_assets,
          financial_leverage = total_assets / equity)
 
-# ROEの三分解の計算結果を表示（パイプ演算子を使用する場合）
+# ROEの三分解の計算結果を表示
+# パイプ演算子を使用する場合
 financial_data |>
   select(firm_name, year, roe, profit_margin, asset_turnover, financial_leverage) |>
   print()
 
-# ROEの三分解の計算結果を表示（パイプ演算子を使用しない場合）
+# パイプ演算子を使用しない場合
 print(select(financial_data,
              firm_name, year, roe, profit_margin, asset_turnover, financial_leverage))

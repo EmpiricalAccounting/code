@@ -68,4 +68,3 @@ bin_quantiles |>
        x     = "ROA Bin (median)",
        y     = "Warking Capital") +
   theme_classic()
-
