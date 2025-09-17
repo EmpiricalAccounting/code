@@ -53,7 +53,7 @@ t.test(leverage ~ ifrs, data = financial_data)
 t.test(roa ~ ifrs, data = financial_data)
 
 # ロジット分析の実施
-result_logit <- glm(ifrs ~ ratio_goodwill + ratio_rd + ratio_foreign_sales
+model_logit <- glm(ifrs ~ ratio_goodwill + ratio_rd + ratio_foreign_sales
                     + ratio_foreign_shares + size + leverage + roa,
                      data = financial_data,
                      family = binomial(link = "logit"))
@@ -62,7 +62,12 @@ result_logit <- glm(ifrs ~ ratio_goodwill + ratio_rd + ratio_foreign_sales
 library(modelsummary)
 
 # 結果の表示
-msummary(result_logit,
+msummary(model_logit,
+         # t値を表示する
          statistic = "statistic",
+         # 有意の星をつける
          star = TRUE,
-         stars = c("*" = .10, "**" = .05, "***" = .01))
+         # 有意水準と星の数を設定する
+         stars = c("*" = .10, "**" = .05, "***" = .01),
+         # 観測値の数と自由度調整済み決定係数を表示させる
+         gof_map = c("nobs", "adj.r.squared"))
