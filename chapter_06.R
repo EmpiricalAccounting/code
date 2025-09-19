@@ -20,7 +20,7 @@ financial_data |>
   geom_histogram(aes(x = roa),
                  binwidth = 0.008, boundary = 0,
                  fill = "lightgray", color = "black") +
-  scale_x_continuous(limits = c(-0.1, 0.1)) +
+  scale_x_continuous(limits = c(-0.08, 0.08)) +
   labs(title = "Histogram of ROA", x = "ROA", y = "Count") +
   theme_classic()
 
