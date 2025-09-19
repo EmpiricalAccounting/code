@@ -32,13 +32,12 @@ financial_data |>
                  binwidth = 0.008, boundary = 0, color = "black") +
   scale_fill_manual(values = c("TRUE" = "black", "FALSE" = "lightgray"),
                     guide = "none") +
-  scale_x_continuous(limits = c(-0.1, 0.1)) +
+  scale_x_continuous(limits = c(-0.08, 0.08)) +
   labs(title = "Histogram of ROA", x = "ROA", y = "Count") +
   theme_classic()
 
 # 区切り点を作成する
-breaks <- seq(-0.1, 0.1, by = 0.008) |>
-  c(0) |>
+breaks <- seq(-0.08, 0.08, by = 0.008) |>
   sort()
 
 # ROAをビン幅に区分する
