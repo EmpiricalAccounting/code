@@ -13,7 +13,7 @@ rm(list = ls())
 # tidyverseパッケージのインストール（初回）
 install.packages(c("tidyverse", "car", "psych", "modelsummary"))
 
-# tidyverseパッケージのインストール（インストール完了後は、# でコメント・アウト）
+# tidyverseパッケージのインストール（インストール完了後は，# でコメント・アウト）
 # install.packages(c("tidyverse", "car", "psych", "modelsummary"))
 
 # パッケージの読み込み
@@ -28,7 +28,7 @@ head(financial_data)
 # 記述統計
 summary(financial_data)
 
-# ROEの三分解を計算して、結果をfinancial_dataに追加する
+# ROEの三分解を計算して，結果をfinancial_dataに追加する
 # 第1引数を直接書く場合
 financial_data <- mutate(financial_data,
                          roe                = earnings / equity,

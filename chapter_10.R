@@ -13,7 +13,7 @@ financial_data <- financial_data |>
   mutate(
     # intro: ocf・icf が負，fcf が正
     intro = ocf < 0 & icf < 0 & fcf > 0,
-    # growth: ocf・fcf が正、icf が負
+    # growth: ocf・fcf が正，icf が負
     growth = ocf > 0 & icf < 0 & fcf > 0,
     # mature: ocf が正，icf・fcf が負
     mature =  ocf > 0 & icf < 0 & fcf < 0,

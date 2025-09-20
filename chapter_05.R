@@ -18,7 +18,7 @@ join_data <- inner_join(financial_data, stock_data, by = c("stock_code", "year")
 
 # 不要な列の削除
 clean_data <- join_data |>
-  # name.x と name.y を統合し、name という新しい列を作る
+  # name.x と name.y を統合し，name という新しい列を作る
   mutate(firm_name = coalesce(firm_name.x, firm_name.y)) |>
   # 必要な列だけを選択
   select(firm_id, year, firm_name, stock_code, industry_name, stock_market,
