@@ -18,17 +18,17 @@ earnings_data <- read_csv("ch08_earnings_data.csv")
 head(earnings_data)
 
 # 増益企業と減益企業の判定
-earning_change <- earnings_data |>
+earnings_change <- earnings_data |>
+  arrange(firm_id, year) |>
   group_by(firm_id) |>
-  arrange(year) |>
-  mutate(diff_earnings = earnings - lag(earnings, 1),
-         earning_change = diff_earnings > 0) |>
+  mutate(diff_earnings   = earnings - lag(earnings, 1),
+         earnings_change = diff_earnings > 0) |>
   ungroup() |>
-  drop_na(earning_change)
+  drop_na(earnings_change)
 
 # 数の確認
-earning_change |>
-  group_by(earning_change) |>
+earnings_change |>
+  group_by(earnings_change) |>
   count()
 
 # 通算日数のリスト化
@@ -54,7 +54,7 @@ dates_announce <- dates |>
   select(announce_date, relative_date, date)
 
 # 相対日数と利益データと株価データとインデックスデータの結合
-sample_data <- earning_change |>
+sample_data <- earnings_change |>
   left_join(dates_announce, by = "announce_date") |>
   left_join(stock_data, by = c("firm_id", "date")) |>
   left_join(index_data, by = "date")
@@ -62,13 +62,13 @@ sample_data <- earning_change |>
 # 確認
 sample_data |>
   filter(firm_id == 1, year == 2023) |>
-  select(announce_date, relative_date, date, earning_change, stock_price, index) |>
+  select(announce_date, relative_date, date, earnings_change, stock_price, index) |>
   print(n = Inf)
 
 # 株式リターンの計算
 sample_return <- sample_data |>
+  arrange(firm_id, date) |>
   group_by(firm_id, year) |>
-  arrange(date) |>
   mutate(return       = (stock_price - lag(stock_price, 1)) / lag(stock_price, 1),
          index_return = (index - lag(index, 1)) / lag(index, 1),
          return       = replace_na(return, 0),
@@ -92,13 +92,13 @@ sample_ar |>
 # ARの平均値
 sample_ar |>
   filter(relative_date == 0) |>
-  group_by(earning_change) |>
+  group_by(earnings_change) |>
   summarise(mean(ar))
 
 # 累積異常リターン（CAR）の計算
 sample_car <- sample_ar |>
+  arrange(firm_id, date) |>
   group_by(firm_id, year) |>
-  arrange(date) |>
   mutate(car = cumsum(ar)) |>
   ungroup()
 
@@ -110,7 +110,7 @@ sample_car |>
 
 # 増益減益それぞれでのCARの日ごとの平均値
 sample_car_mean <- sample_car |>
-  group_by(earning_change, relative_date) |>
+  group_by(earnings_change, relative_date) |>
   summarise(mean_car = mean(car, na.rm = TRUE),
             .groups = "drop")
 
@@ -121,7 +121,7 @@ sample_car_mean |>
 # グラフの作成
 sample_car_mean |>
   # 増益（Good）と減益（Bad）のラベルを作って順番を調整
-  mutate(earnings_change_label = if_else(earning_change, "Good", "Bad"),
+  mutate(earnings_change_label = if_else(earnings_change, "Good", "Bad"),
          earnings_change_label = factor(earnings_change_label, levels = c("Good", "Bad"))) |>
   ggplot() +
   geom_line(aes(x = relative_date, y = mean_car, linetype = earnings_change_label)) +

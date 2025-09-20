@@ -14,7 +14,7 @@ financial_data <- financial_data |>
          wac = working_capital / lag_total_assets)
 
 # ROAのヒストグラムの作成（
-# ビンは灰色で黒枠，範囲は-0.1から0.1，必ず[0,0.008]を通る
+# ビンは灰色で黒枠，範囲は-0.08から0.08，必ず[0,0.008]を通る
 financial_data |>
   ggplot() +
   geom_histogram(aes(x = roa),

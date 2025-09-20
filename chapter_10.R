@@ -34,15 +34,12 @@ lifecycle_counts
 
 # 変数の計算
 financial_data <- financial_data |>
+  arrange(firm_id, year) |>
   group_by(firm_id) |>
-  arrange(year) |>
   mutate(roa                  = operating_income / total_assets,
          delta_roa            = roa - lag(roa, 1),
          lead_1_delta_roa     = lead(delta_roa, 1),
          lead_2_delta_roa     = lead(delta_roa, 2),
-         lead_3_delta_roa     = lead(delta_roa, 3),
-         lead_4_delta_roa     = lead(delta_roa, 4),
-         lead_5_delta_roa     = lead(delta_roa, 5),
          delta_assets         = (total_assets - lag(total_assets, 1)) / total_assets,
          asset_turnover       = sales / total_assets,
          delta_asset_turnover = asset_turnover - lag(asset_turnover, 1),
@@ -80,7 +77,7 @@ library(modelsummary)
 
 # msummary()による結果の表示
 # list()で結果を並べることで複数の結果を並べることができる
-msummary(list(model_lead_1, model_lead_2, model_lead_3, model_lead_4, model_lead_5),
+msummary(list(model_lead_1, model_lead_2),
          # 表示したい係数を指定する
          coef_map = c("roa", "delta_roa", "delta_assets", "delta_asset_turnover",
                       "delta_profit_margin", "introTRUE", "growthTRUE", "shakeoutTRUE",
