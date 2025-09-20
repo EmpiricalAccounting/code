@@ -11,16 +11,16 @@ head(financial_data)
 # 企業のライフサイクルステージを判定する
 financial_data <- financial_data |>
   mutate(
-    # intro: ocf・icf が負、fcf が正
+    # intro: ocf・icf が負，fcf が正
     intro = ocf < 0 & icf < 0 & fcf > 0,
     # growth: ocf・fcf が正、icf が負
-    growth = ocf > 0 & fcf > 0 & icf < 0,
-    # mature: icf・fcf が負、ocf が正
-    mature = icf < 0 & fcf < 0 & ocf > 0,
-    # decline: ocf が負、icf が正（fcf は不問）
+    growth = ocf > 0 & icf < 0 & fcf > 0,
+    # mature: ocf が正，icf・fcf が負
+    mature =  ocf > 0 & icf < 0 & fcf < 0,
+    # decline: ocf が負，icf が正（fcf は不問）
     decline = ocf < 0 & icf > 0,
     # shakeout: intro・growth・mature・decline がすべて 0 のとき 1
-    shakeout = intro == 0L & growth == 0L & mature == 0L & decline == 0L
+    shakeout = intro == 0 & growth == 0 & mature == 0 & decline == 0
   )
 
 # それぞれのライフサイクルでの観測値の数をカウント
