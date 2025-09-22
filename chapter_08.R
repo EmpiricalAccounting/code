@@ -92,8 +92,7 @@ sample_ar |>
 # ARの平均値
 sample_ar |>
   filter(relative_date == 0) |>
-  group_by(earnings_change) |>
-  summarise(mean(ar))
+  summarise(mean(ar), .by = earnings_change)
 
 # 累積異常リターン（CAR）の計算
 sample_car <- sample_ar |>
@@ -110,9 +109,8 @@ sample_car |>
 
 # 増益減益それぞれでのCARの日ごとの平均値
 sample_car_mean <- sample_car |>
-  group_by(earnings_change, relative_date) |>
   summarise(mean_car = mean(car, na.rm = TRUE),
-            .groups = "drop")
+            .by = c(earnings_change, relative_date))
 
 # 確認
 sample_car_mean |>

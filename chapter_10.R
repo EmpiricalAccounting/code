@@ -10,26 +10,25 @@ head(financial_data)
 
 # 企業のライフサイクルステージを判定する
 financial_data <- financial_data |>
-  mutate(
-    # intro: ocf・icf が負，fcf が正
-    intro = ocf < 0 & icf < 0 & fcf > 0,
-    # growth: ocf・fcf が正，icf が負
-    growth = ocf > 0 & icf < 0 & fcf > 0,
-    # mature: ocf が正，icf・fcf が負
-    mature =  ocf > 0 & icf < 0 & fcf < 0,
-    # decline: ocf が負，icf が正（fcf は不問）
-    decline = ocf < 0 & icf > 0,
-    # shakeout: intro・growth・mature・decline がすべて 0 のとき 1
-    shakeout = intro == 0 & growth == 0 & mature == 0 & decline == 0
-  )
+  mutate(intro = ocf < 0 & icf < 0 & fcf > 0,
+         growth = ocf > 0 & icf < 0 & fcf > 0,
+         mature =  ocf > 0 & icf < 0 & fcf < 0,
+         decline = ocf < 0 & icf > 0,
+         # shakeoutはintro・growth・mature・declineがすべてFALSEのときTRUE
+         shakeout = intro == FALSE & growth == FALSE & mature == FALSE & decline == FALSE)
 
 # それぞれのライフサイクルでの観測値の数をカウント
 lifecycle_counts <- financial_data |>
-  summarise(intro    = sum(intro == 1, na.rm = TRUE),
-            growth   = sum(growth == 1, na.rm = TRUE),
-            mature   = sum(mature == 1, na.rm = TRUE),
-            shakeout = sum(shakeout == 1, na.rm = TRUE),
-            decline  = sum(decline == 1, na.rm = TRUE))
+  mutate(lifecycle = case_when(intro    == TRUE ~ "intro",
+                               growth   == TRUE ~ "growth",
+                               mature   == TRUE ~ "mature",
+                               shakeout == TRUE ~ "shakeout",
+                               decline  == TRUE ~ "decline"),
+         # 順序を明示的にする
+         lifecycle = factor(lifecycle,
+                            levels = c("intro", "growth", "mature", "shakeout", "decline"))) |>
+  summarise(n = n(), .by = lifecycle) |>
+  arrange(lifecycle)
 lifecycle_counts
 
 # 変数の計算

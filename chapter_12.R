@@ -10,16 +10,13 @@ financial_data <- read_csv("ch12_determinant_analysis.csv")
 # データの表示
 head(financial_data)
 
-# ifrsはダミー変数なのでファクター型にしておく
-financial_data <- financial_data |>
-  mutate(ifrs = as.factor(ifrs))
-
 # IFRS適用企業と日本基準適用企業の観測値の数
-table(financial_data$ifrs)
+table(financial_data$accounting_standard)
 
 # 変数の計算
 financial_data <- financial_data |>
-  mutate(ratio_goodwill       = goodwill / total_assets,
+  mutate(ifrs                 = if_else(accounting_standard == "IFRS", 1, 0),
+         ratio_goodwill       = goodwill / total_assets,
          ratio_rd             = research_development / sales,
          ratio_foreign_sales  = foreign_sales / sales,
          ratio_foreign_shares = foreign_ownership * shares_unit / shares_outstanding,

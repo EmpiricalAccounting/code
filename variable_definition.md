@@ -77,18 +77,18 @@
 
 ### ch12_determinant_analysis.csv
 
-| 変数名               | 定義                                               |
-| -------------------- | -------------------------------------------------- |
-| firm_id              | 企業コード                                         |
-| year                 | 年度                                               |
-| ifrs                 | IFRS適用企業なら1、そうでないなら0をとるダミー変数 |
-| total_assets         | 総資産                                             |
-| sales                | 売上高                                             |
-| shares_outstanding   | 発行済株式総数                                     |
-| goodwill             | のれん                                             |
-| research_development | 配当の有無                                         |
-| foreign_sales        | 海外売上高                                         |
-| foreign_ownership    | 外国人保有株式単元数                               |
-| shares_unit          | 1単元の株数                                        |
-| liabilities          | 負債総額                                           |
-| earnings             | 純利益                                             |
+| 変数名               | 定義                                            |
+| -------------------- | ----------------------------------------------- |
+| firm_id              | 企業コード                                      |
+| year                 | 年度                                            |
+| accounting_standard  | 会計基準（IFRSなら"IFRS"、日本基準なら"Japan"） |
+| total_assets         | 総資産                                          |
+| sales                | 売上高                                          |
+| shares_outstanding   | 発行済株式総数                                  |
+| goodwill             | のれん                                          |
+| research_development | 研究開発費                                      |
+| foreign_sales        | 海外売上高                                      |
+| foreign_ownership    | 外国人保有株式単元数                            |
+| shares_unit          | 1単元の株数                                     |
+| liabilities          | 負債総額                                        |
+| earnings             | 純利益                                          |

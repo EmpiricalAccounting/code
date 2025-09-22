@@ -37,22 +37,21 @@ financial_data |>
   theme_classic()
 
 # 区切り点を作成する
-breaks <- seq(-0.08, 0.08, by = 0.008) |>
+bin_breaks <- seq(-0.08, 0.08, by = 0.008) |>
   sort()
 
 # ROAをビン幅に区分する
 financial_data <- financial_data |>
-  mutate(bin = cut(roa, breaks = breaks, include.lowest = TRUE, labels = FALSE))
+  mutate(bin = cut(roa, breaks = bin_breaks, include.lowest = TRUE, labels = FALSE))
 
 # 四分位点をビン幅ごとに計算
 bin_quantiles <- financial_data |>
-  group_by(bin) |>
-  summarize(q_25  = quantile(wac, 0.25, na.rm = TRUE),
-            q_50  = quantile(wac, 0.5, na.rm = TRUE),
-            q_75  = quantile(wac, 0.75, na.rm = TRUE),
-            .groups = "drop") |>
+  summarize(q_25   = quantile(wac, 0.25, na.rm = TRUE),
+            q_50   = quantile(wac, 0.5, na.rm = TRUE),
+            q_75   = quantile(wac, 0.75, na.rm = TRUE),
+            .by = bin) |>
   # 区間の中央値
-  mutate(bin_mid = (breaks[as.integer(bin)] + breaks[as.integer(bin) + 1]) / 2)
+  mutate(bin_mid = (bin_breaks[as.integer(bin)] + bin_breaks[as.integer(bin) + 1]) / 2)
 
 # ビン幅ごとの四分位点の図表を表示
 bin_quantiles |>
