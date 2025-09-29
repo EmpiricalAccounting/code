@@ -6,8 +6,6 @@ library(tidyverse)
 
 # データの読み込み
 financial_data <- read_csv("ch12_determinant_analysis.csv")
-
-# データの表示
 head(financial_data)
 
 # IFRS適用企業と日本基準適用企業の観測値の数
@@ -58,9 +56,9 @@ model_logit <- glm(ifrs ~ ratio_goodwill + ratio_rd + ratio_foreign_sales
 # modelsummaryパッケージの読み込み
 library(modelsummary)
 
-# 結果の表示
+# 分析結果の表示
 msummary(model_logit,
-         # t値を表示する
+         # z値を表示する
          statistic = "statistic",
          # 有意の星をつける
          star = TRUE,

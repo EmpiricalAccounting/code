@@ -13,7 +13,7 @@ head(financial_data)
 stock_data <- read_csv("ch05_stock_data.csv")
 head(stock_data)
 
-# 複合キー（code と year）で結合
+# 複合キー（stock_code と year）で結合
 join_data <- inner_join(financial_data, stock_data, by = c("stock_code", "year"))
 
 # 不要な列の削除

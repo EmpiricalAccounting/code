@@ -26,7 +26,7 @@ earnings_change <- earnings_data |>
   ungroup() |>
   drop_na(earnings_change)
 
-# 数の確認
+# 増益と減益の数の確認
 earnings_change |>
   group_by(earnings_change) |>
   count()
@@ -38,7 +38,7 @@ dates <- stock_data |>
   arrange(date) |>
   mutate(date_number = row_number())
 
-# 開始と終了時点の判定
+# 開始時点と終了時点の判定
 start_end <- dates |>
   # 通算日数リストの日付と番号をアナウンスメント日とする
   rename(announce_date = date,
@@ -55,11 +55,11 @@ dates_announce <- dates |>
 
 # 相対日数と利益データと株価データとインデックスデータの結合
 sample_data <- earnings_change |>
-  left_join(dates_announce, by = "announce_date") |>
+  left_join(dates_announce, by = "announce_date", relationship = "many-to-many") |>
   left_join(stock_data, by = c("firm_id", "date")) |>
   left_join(index_data, by = "date")
 
-# 確認
+# firm_idが1、yearが2023のデータを確認
 sample_data |>
   filter(firm_id == 1, year == 2023) |>
   select(announce_date, relative_date, date, earnings_change, stock_price, index) |>
@@ -75,6 +75,7 @@ sample_return <- sample_data |>
          index_return = replace_na(index_return, 0)) |>
   ungroup()
 
+# firm_idが1、yearが2023、relative_dateが0のデータについて、
 # 株式リターンとインデックスリターンの確認
 sample_return |>
   filter(firm_id == 1, year == 2023, relative_date == 0) |>
@@ -84,12 +85,13 @@ sample_return |>
 sample_ar <- sample_return |>
   mutate(ar = return - index_return)
 
-# ARの確認（1社）
+# firm_idが1、yearが2023、relative_dateが0のデータについて、
+# ARの確認
 sample_ar |>
   filter(firm_id == 1, year == 2023, relative_date == 0) |>
   select(ar)
 
-# ARの平均値
+# 決算発表日でのARの平均値の計算
 sample_ar |>
   filter(relative_date == 0) |>
   summarise(mean(ar), .by = earnings_change)
@@ -101,22 +103,22 @@ sample_car <- sample_ar |>
   mutate(car = cumsum(ar)) |>
   ungroup()
 
+# firm_idが1、yearが2023、relative_dateが0のデータについて、
 # CARの確認
 sample_car |>
   filter(firm_id == 1, year == 2023, relative_date == 0) |>
-  select(car) |>
-  print()
+  select(car)
 
-# 増益減益それぞれでのCARの日ごとの平均値
+# 増益減益それぞれでのCARの相対日数ごとの平均値
 sample_car_mean <- sample_car |>
-  summarise(mean_car = mean(car, na.rm = TRUE),
+  summarise(mean_car = mean(car),
             .by = c(earnings_change, relative_date))
 
-# 確認
+# 決算発表日でのCARの平均値の確認
 sample_car_mean |>
   filter(relative_date == 0)
 
-# グラフの作成
+# CARのグラフの作成
 sample_car_mean |>
   # 増益（Good）と減益（Bad）のラベルを作って順番を調整
   mutate(earnings_change_label = if_else(earnings_change, "Good", "Bad"),
