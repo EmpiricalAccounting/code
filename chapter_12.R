@@ -64,5 +64,5 @@ msummary(model_logit,
          star = TRUE,
          # 有意水準と星の数を設定する
          stars = c("*" = .10, "**" = .05, "***" = .01),
-         # 観測値の数と自由度調整済み決定係数を表示させる
-         gof_map = c("nobs", "adj.r.squared"))
+         # 観測値の数を表示させる
+         gof_map = "nobs")
