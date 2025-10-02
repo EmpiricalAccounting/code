@@ -10,24 +10,21 @@ head(financial_data)
 
 # 企業のライフサイクルステージを判定する
 financial_data <- financial_data |>
-  mutate(intro = ocf < 0 & icf < 0 & fcf > 0,
-         growth = ocf > 0 & icf < 0 & fcf > 0,
-         mature =  ocf > 0 & icf < 0 & fcf < 0,
-         decline = ocf < 0 & icf > 0,
-         # shakeoutはintro・growth・mature・declineがすべてFALSEのときTRUE
-         shakeout = intro == FALSE & growth == FALSE & mature == FALSE & decline == FALSE)
+  mutate(lifecycle = case_when(
+    ocf < 0 & icf < 0 & fcf > 0 ~ "intro",
+    ocf > 0 & icf < 0 & fcf > 0 ~ "growth",
+    ocf > 0 & icf < 0 & fcf < 0 ~ "mature",
+    ocf < 0 & icf > 0           ~ "decline",
+    # どれも当てはまらなければデフォルトのshakeoutになる
+    .default = "shakeout"),
+    # ライフサイクルの順番を設定する
+    lifecycle = factor(lifecycle,
+                       levels = c("intro", "growth", "mature",
+                                  "decline", "shakeout")))
 
 # それぞれのライフサイクルでの観測値の数をカウント
 lifecycle_counts <- financial_data |>
-  mutate(lifecycle = case_when(intro    == TRUE ~ "intro",
-                               growth   == TRUE ~ "growth",
-                               mature   == TRUE ~ "mature",
-                               shakeout == TRUE ~ "shakeout",
-                               decline  == TRUE ~ "decline"),
-         # 順序を明示的にする
-         lifecycle = factor(lifecycle,
-                            levels = c("intro", "growth", "mature", "shakeout", "decline"))) |>
-  summarise(n = n(), .by = lifecycle) |>
+  count(lifecycle, name = "n") |>
   arrange(lifecycle)
 lifecycle_counts
 
@@ -39,7 +36,7 @@ financial_data <- financial_data |>
          delta_roa            = roa - lag(roa, 1),
          lead_1_delta_roa     = lead(delta_roa, 1),
          lead_2_delta_roa     = lead(delta_roa, 2),
-         delta_assets         = (total_assets - lag(total_assets, 1)) / total_assets,
+         delta_assets         = (total_assets - lag(total_assets, 1)) / lag(total_assets, 1),
          asset_turnover       = sales / total_assets,
          delta_asset_turnover = asset_turnover - lag(asset_turnover, 1),
          profit_margin        = operating_income / sales,
