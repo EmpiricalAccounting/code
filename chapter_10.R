@@ -47,7 +47,10 @@ financial_data <- financial_data |>
 
          # 年度ダミー
          # 年度をファクター型にすることで重回帰分析で年度ダミーとして扱われる
-         year = as.factor(year)
+         year = as.factor(year),
+         
+         # 企業コードをファクター型にする
+         firm_id = as.factor(firm_id)
   ) |>
   ungroup()
 
