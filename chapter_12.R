@@ -65,6 +65,5 @@ msummary(model_logit,
          # 有意水準と星の数を設定する
          stars = c("*" = .10, "**" = .05, "***" = .01),
          # 観測値の数を表示させる
-         gof_map = "nobs",
-         ci_method = "wald")
+         gof_map = "nobs")
 
