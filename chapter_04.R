@@ -25,6 +25,15 @@ financial_data <- read_csv("ch04_financial_data.csv")
 # 読み込んだデータの確認
 head(financial_data)
 
+# ファクター型への変更
+financial_data <- financial_data |> 
+  mutate(firm_id             = as.factor(firm_id),
+         firm_name           = as.factor(firm_name),
+         stock_code          = as.factor(stock_code),
+         industry_name       = as.factor(industry_name),
+         stock_market        = as.factor(stock_market),
+         accounting_standard = as.factor(accounting_standard))
+
 # 記述統計
 summary(financial_data)
 
