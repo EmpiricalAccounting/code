@@ -22,7 +22,7 @@ financial_data <- financial_data |>
          leverage             = liabilities / total_assets,
          roa                  = earnings / total_assets,
 
-         # 企業コードをファクター型にする
+         # 企業コードを因子型にする
          firm_id = as.factor(firm_id))
 
 # 記述統計量の表示
