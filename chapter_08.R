@@ -94,7 +94,7 @@ sample_ar |>
 # 決算発表日でのARの平均値の計算
 sample_ar |>
   filter(relative_date == 0) |>
-  summarise(mean(ar), .by = earnings_change)
+  summarise(mean_ar = mean(ar), .by = earnings_change)
 
 # 累積異常リターン（CAR）の計算
 sample_car <- sample_ar |>

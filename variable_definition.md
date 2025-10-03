@@ -27,15 +27,15 @@
 
 ### ch06_benchmark_analysis.csv
 
-| 変数名            | 定義           |
-| ----------------- | -------------- |
-| firm_id           | 企業コード     |
-| year              | 年度           |
-| earnings          | 純利益（当期） |
-| earnings_forecast | 予想純利益     |
-| lag_earnings      | 純利益（前期） |
-| lag_total_assets  | 総資産（前期） |
-| working_capital   | 運転資本       |
+| 変数名                | 定義                   |
+| --------------------- | ---------------------- |
+| firm_id               | 企業コード             |
+| year                  | 年度                   |
+| earnings              | 純利益（当期）         |
+| earnings_forecast     | 予想純利益             |
+| lag_earnings          | 純利益（前期）         |
+| lag_total_assets      | 総資産（前期）         |
+| delta_working_capital | 運転資本発生高（変化） |
 
 ### ch08_stock_data.csv
 

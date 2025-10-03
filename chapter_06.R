@@ -11,7 +11,7 @@ head(financial_data)
 # benchmarkのデータベースにROAとWACの変数の作成
 financial_data <- financial_data |>
   mutate(roa = earnings / lag_total_assets,
-         wac = working_capital / lag_total_assets)
+         wac = delta_working_capital / lag_total_assets)
 
 # ROAのヒストグラムの作成（
 # ビンは灰色で黒枠，範囲は-0.08から0.08，必ず[0,0.008]を通る

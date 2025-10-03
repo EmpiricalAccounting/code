@@ -20,7 +20,7 @@ financial_data <- financial_data |>
     # ライフサイクルの順番を設定する
     lifecycle = factor(lifecycle,
                        levels = c("intro", "growth", "mature",
-                                  "decline", "shakeout")))
+                                  "shakeout", "decline")))
 
 # それぞれのライフサイクルでの観測値の数をカウント
 lifecycle_counts <- financial_data |>
@@ -42,9 +42,19 @@ financial_data <- financial_data |>
          profit_margin        = operating_income / sales,
          delta_profit_margin  = profit_margin - lag(profit_margin, 1),
 
+         # ライフサイクルステージそれぞれのダミー変数の作成
+         intro   = if_else(lifecycle == "intro", 1, 0),
+         growth  = if_else(lifecycle == "growth", 1, 0),
+         mature  = if_else(lifecycle == "mature", 1, 0),
+         decline  = if_else(lifecycle == "decline", 1, 0),
+         shakeout = if_else(lifecycle == "shakeout", 1, 0),
+
          # 年度ダミー
-         # 年度をファクター型にすることで重回帰分析で年度ダミーとして扱われる
-         year = as.factor(year)
+         # 年度をファクター型にすることで，重回帰分析で年度ダミーとして扱われる
+         year = as.factor(year),
+
+         # 企業コードをファクター型にする
+         firm_id = as.factor(firm_id)
   ) |>
   ungroup()
 
@@ -76,8 +86,8 @@ library(modelsummary)
 msummary(list(model_lead_1, model_lead_2),
          # 表示したい係数を指定する
          coef_map = c("roa", "delta_roa", "delta_assets", "delta_asset_turnover",
-                      "delta_profit_margin", "introTRUE", "growthTRUE", "shakeoutTRUE",
-                      "declineTRUE", "(Intercept)"),
+                      "delta_profit_margin", "intro", "growth", "shakeout",
+                      "decline", "(Intercept)"),
          # t値を表示する
          statistic = "statistic",
          # 有意の星をつける
